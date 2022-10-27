@@ -1,0 +1,13 @@
+{
+  "name": "jp.co.tis.extreal.integration.multiplay",
+  "version": "0.1.0",
+  "displayName": "Extreal.Integration.Multiplay",
+  "unity": "2021.3",
+  "author": {
+    "name": "TIS Inc."
+  },
+  "dependencies": {
+    "jp.co.tis.extreal.core.logging": "0.1.0",
+    "com.unity.netcode.gameobjects": "1.0.2"
+  }
+}

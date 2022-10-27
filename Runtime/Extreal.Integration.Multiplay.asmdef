@@ -1,0 +1,17 @@
+{
+    "name": "Extreal.Integration.Multiplay",
+    "rootNamespace": "Extreal.Integration.Multiplay",
+    "references": [
+        "UniTask",
+        "Unity.Netcode.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
