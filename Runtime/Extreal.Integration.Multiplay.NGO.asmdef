@@ -1,9 +1,12 @@
 {
-    "name": "Extreal.Integration.Multiplay",
-    "rootNamespace": "Extreal.Integration.Multiplay",
+    "name": "Extreal.Integration.Multiplay.NGO",
+    "rootNamespace": "Extreal.Integration.Multiplay.NGO",
     "references": [
+        "Extreal.Core.Logging",
+        "Unity.Netcode.Runtime",
         "UniTask",
-        "Unity.Netcode.Runtime"
+        "UniRx",
+        "Extreal.Framework.Analyzer"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

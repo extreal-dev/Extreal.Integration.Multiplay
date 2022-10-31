@@ -1,10 +1,10 @@
 {
-    "name": "Extreal.Integration.Multiplay.Test",
-    "rootNamespace": "Extreal.Integration.Multiplay.Test",
+    "name": "Extreal.Integration.Multiplay.NGO.Test",
+    "rootNamespace": "Extreal.Integration.Multiplay.NGO.Test",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "Extreal.Integration.Multiplay"
+        "Extreal.Integration.Multiplay.NGO"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
