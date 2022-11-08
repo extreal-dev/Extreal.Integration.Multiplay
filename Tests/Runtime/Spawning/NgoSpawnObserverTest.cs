@@ -89,6 +89,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             ngoServer.OnClientDisconnecting -= OnClientDisconnectingEventHandler;
 
             disposables.Clear();
+            ngoSpawnObserver.Clear();
             serverMessagingHub.Dispose();
             ngoServer.Dispose();
 

@@ -259,7 +259,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
             await UniTask.WaitUntil(() => onMessageReceived);
             Assert.AreEqual(connectedClientId, serverMessagingHub.ReceivedClientId);
-            Assert.AreEqual(MessageNameConst.HELLO_WORLD_TO_SERVER.ToString(), serverMessagingHub.ReceivedMessageName);
+            Assert.AreEqual(MessageName.HELLO_WORLD_TO_SERVER, serverMessagingHub.ReceivedMessageName);
             Assert.AreEqual("Hello World", serverMessagingHub.ReceivedMessageText);
 
             await UniTask.WaitUntil(() => onClientDisconnecting);
@@ -330,12 +330,12 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             await UniTask.WaitUntil(() => onMessageReceived);
             onMessageReceived = false;
             Assert.AreEqual(firstConnectedClientId, serverMessagingHub.ReceivedClientId);
-            Assert.AreEqual(MessageNameConst.HELLO_WORLD_TO_SERVER.ToString(), serverMessagingHub.ReceivedMessageName);
+            Assert.AreEqual(MessageName.HELLO_WORLD_TO_SERVER, serverMessagingHub.ReceivedMessageName);
             Assert.AreEqual("Hello World", serverMessagingHub.ReceivedMessageText);
 
             await UniTask.WaitUntil(() => onMessageReceived);
             Assert.AreEqual(connectedClientId, serverMessagingHub.ReceivedClientId);
-            Assert.AreEqual(MessageNameConst.HELLO_WORLD_TO_SERVER.ToString(), serverMessagingHub.ReceivedMessageName);
+            Assert.AreEqual(MessageName.HELLO_WORLD_TO_SERVER, serverMessagingHub.ReceivedMessageName);
             Assert.AreEqual("Hello World", serverMessagingHub.ReceivedMessageText);
 
             await UniTask.WaitUntil(() => ngoServer.ConnectedClients.Count == 0);

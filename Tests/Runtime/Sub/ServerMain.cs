@@ -10,6 +10,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
     public class ServerMain : MonoBehaviour
     {
         [SerializeField] private NetworkManager networkManager;
+        [SerializeField] private NetworkObject networkObjectPrefab;
 
         private INgoServer ngoServer;
         private ServerMessagingHub serverMessagingHub;
@@ -43,6 +44,24 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 #pragma warning restore CC0068
 
         private void OnMessageReceivedEventHandler()
-            => serverMessagingHub.SendHelloWorldToAllClients();
+        {
+#pragma warning disable CC0120
+#pragma warning disable IDE0010
+            switch (serverMessagingHub.ReceivedMessageName)
+            {
+                case MessageName.SPAWN_PLAYER_TO_SERVER:
+                {
+                    _ = NgoSpawnHelper.SpawnAsPlayerObject(serverMessagingHub.ReceivedClientId, networkObjectPrefab.gameObject);
+                    break;
+                }
+                case MessageName.HELLO_WORLD_TO_SERVER:
+                {
+                    _ = serverMessagingHub.SendHelloWorldToAllClients();
+                    break;
+                }
+            }
+#pragma warning disable IDE0010
+#pragma warning disable CC0120
+        }
     }
 }

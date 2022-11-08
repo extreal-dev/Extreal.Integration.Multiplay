@@ -467,6 +467,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   networkManager: {fileID: 1479579892}
+  networkObjectPrefab: {fileID: 4970844642478724279, guid: f261f6037b65d0b4d9b070b90be36b90,
+    type: 3}
 --- !u!4 &1983590268
 Transform:
   m_ObjectHideFlags: 0

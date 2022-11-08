@@ -272,7 +272,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
             await UniTask.WaitUntil(() => onMessageReceived);
 
-            Assert.AreEqual(MessageNameConst.HELLO_WORLD_TO_ALL_CLIENTS.ToString(), clientMassagingHub.ReceivedMessageName);
+            Assert.AreEqual(MessageName.HELLO_WORLD_TO_ALL_CLIENTS, clientMassagingHub.ReceivedMessageName);
             Assert.AreEqual("Hello World", clientMassagingHub.ReceivedMessageText);
         });
 

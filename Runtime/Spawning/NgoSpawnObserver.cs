@@ -59,11 +59,11 @@ namespace Extreal.Integration.Multiplay.NGO
                 throw new InvalidOperationException($"{nameof(NetworkManager)} must be connected to server or listening before start");
             }
 
+            Clear();
             if (Logger.IsDebug())
             {
                 Logger.LogDebug($"Start Observation");
             }
-            Clear();
 
             _ = spawnManager.SpawnedObjects
                 .ObserveEveryValueChanged(dict => dict.Count)

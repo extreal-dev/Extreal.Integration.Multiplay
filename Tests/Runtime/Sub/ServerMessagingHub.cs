@@ -12,10 +12,10 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         public List<ulong> SendClientIds { get; private set; } = new List<ulong>();
         public ulong ReceivedClientId { get; private set; }
 
-        public string ReceivedMessageName { get; private set; }
+        public MessageName ReceivedMessageName { get; private set; }
         public string ReceivedMessageText { get; private set; }
 
-        public string SendMessageName { get; private set; }
+        public MessageName SendMessageName { get; private set; }
         public string SendMessageText { get; private set; }
 
         private readonly INgoServer ngoServer;
@@ -38,16 +38,28 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         {
             SendClientIds.Clear();
             ReceivedClientId = 0;
-            ReceivedMessageName = string.Empty;
+            ReceivedMessageName = MessageName.NONE;
             ReceivedMessageText = string.Empty;
-            SendMessageName = string.Empty;
+            SendMessageName = MessageName.NONE;
             SendMessageText = string.Empty;
+        }
+
+        public void ReceivedSpawnPlayer(ulong clientId, FastBufferReader reader)
+        {
+            ReceivedClientId = clientId;
+            ReceivedMessageName = MessageName.SPAWN_PLAYER_TO_SERVER;
+            ReceivedInternal(reader);
         }
 
         public void ReceivedHelloWorld(ulong clientId, FastBufferReader reader)
         {
             ReceivedClientId = clientId;
-            ReceivedMessageName = MessageNameConst.HELLO_WORLD_TO_SERVER.ToString();
+            ReceivedMessageName = MessageName.HELLO_WORLD_TO_SERVER;
+            ReceivedInternal(reader);
+        }
+
+        private void ReceivedInternal(FastBufferReader reader)
+        {
             reader.ReadValueSafe(out string message);
             ReceivedMessageText = message;
 
@@ -57,14 +69,14 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         public bool SendHelloWorldToClients(List<ulong> clientIds)
         {
             SendClientIds = clientIds;
-            SendMessageName = MessageNameConst.HELLO_WORLD_TO_CLIENT.ToString();
+            SendMessageName = MessageName.HELLO_WORLD_TO_CLIENT;
             SendMessageText = "Hello World";
             return SendInternal(SendType.ToClient);
         }
 
         public bool SendHelloWorldToAllClients()
         {
-            SendMessageName = MessageNameConst.HELLO_WORLD_TO_ALL_CLIENTS.ToString();
+            SendMessageName = MessageName.HELLO_WORLD_TO_ALL_CLIENTS;
             SendMessageText = "Hello World";
             return SendInternal(SendType.ToAllClients);
         }
@@ -78,11 +90,11 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             {
                 case SendType.ToClient:
                 {
-                    return ngoServer.SendMessageToClients(SendClientIds, SendMessageName, messageStream);
+                    return ngoServer.SendMessageToClients(SendClientIds, SendMessageName.ToString(), messageStream);
                 }
                 case SendType.ToAllClients:
                 {
-                    ngoServer.SendMessageToAllClients(SendMessageName, messageStream);
+                    ngoServer.SendMessageToAllClients(SendMessageName.ToString(), messageStream);
                     return true;
                 }
                 default:
@@ -93,10 +105,15 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         }
 
         private void OnServerStartedEventHandler()
-            => ngoServer.RegisterMessageHandler(MessageNameConst.HELLO_WORLD_TO_SERVER.ToString(), ReceivedHelloWorld);
-
+        {
+            ngoServer.RegisterMessageHandler(MessageName.SPAWN_PLAYER_TO_SERVER.ToString(), ReceivedSpawnPlayer);
+            ngoServer.RegisterMessageHandler(MessageName.HELLO_WORLD_TO_SERVER.ToString(), ReceivedHelloWorld);
+        }
         private void OnServerStoppingEventHandler()
-            => ngoServer.UnregisterMessageHandler(MessageNameConst.HELLO_WORLD_TO_SERVER.ToString());
+        {
+            ngoServer.UnregisterMessageHandler(MessageName.SPAWN_PLAYER_TO_SERVER.ToString());
+            ngoServer.UnregisterMessageHandler(MessageName.HELLO_WORLD_TO_SERVER.ToString());
+        }
 
         private enum SendType
         {
