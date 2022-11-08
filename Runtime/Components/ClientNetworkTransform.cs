@@ -5,6 +5,7 @@ using UnityEngine;
 namespace Extreal.Integration.Multiplay.NGO
 {
     [DisallowMultipleComponent]
+    [AddComponentMenu("Extreal.Integration/NGO/" + nameof(ClientNetworkTransform))]
     public class ClientNetworkTransform : NetworkTransform
     {
         public override void OnNetworkSpawn()
