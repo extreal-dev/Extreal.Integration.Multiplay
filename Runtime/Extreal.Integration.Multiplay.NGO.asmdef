@@ -4,6 +4,7 @@
     "references": [
         "Extreal.Core.Logging",
         "Unity.Netcode.Runtime",
+        "Unity.Netcode.Components",
         "UniTask",
         "UniRx",
         "Extreal.Framework.Analyzer"

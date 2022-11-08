@@ -1,6 +1,6 @@
 {
-    "name": "Extreal.Integration.Multiplay.NGO.Test",
-    "rootNamespace": "Extreal.Integration.Multiplay.NGO.Test",
+    "name": "Extreal.Integration.Multiplay.NGO.Test.Sub",
+    "rootNamespace": "Extreal.Integration.Multiplay.NGO.Test.Sub",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
@@ -9,8 +9,7 @@
         "UniTask",
         "UniRx",
         "Extreal.Core.Logging",
-        "Unity.Collections",
-        "Extreal.Integration.Multiplay.NGO.Test.Sub"
+        "Unity.Collections"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -19,7 +18,7 @@
     "precompiledReferences": [
         "nunit.framework.dll"
     ],
-    "autoReferenced": false,
+    "autoReferenced": true,
     "defineConstraints": [
         "UNITY_INCLUDE_TESTS"
     ],
