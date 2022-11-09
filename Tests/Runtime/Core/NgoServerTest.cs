@@ -108,10 +108,10 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public IEnumerator StartServerWithConnectionApproval() => UniTask.ToCoroutine(async () =>
         {
             var connectionApproved = false;
-            ngoServer.SetConnectionApproval((_, connectionData) =>
+            ngoServer.SetConnectionApproval((request, response) =>
             {
                 connectionApproved = true;
-                return connectionData.SequenceEqual(new byte[] { 3, 7, 7, 6 });
+                response.Approved = request.Payload.SequenceEqual(new byte[] { 3, 7, 7, 6 });
             });
 
             await ngoServer.StartServerAsync();

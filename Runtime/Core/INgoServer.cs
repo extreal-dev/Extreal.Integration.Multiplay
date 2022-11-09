@@ -4,13 +4,12 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Unity.Netcode;
 using static Unity.Netcode.CustomMessagingManager;
+using static Unity.Netcode.NetworkManager;
 
 namespace Extreal.Integration.Multiplay.NGO
 {
     public interface INgoServer : IDisposable
     {
-        delegate bool ConnectionApprovalCallback(ulong clientId, byte[] connectionData);
-
         event Action OnServerStarted;
         event Action OnServerStopping;
         event Action<ulong> OnClientConnected;
@@ -22,11 +21,11 @@ namespace Extreal.Integration.Multiplay.NGO
 
         UniTask StartServerAsync(CancellationToken token = default);
         UniTask StopServerAsync();
-        void SetConnectionApproval(ConnectionApprovalCallback approvalConnection);
+        void SetConnectionApproval(Action<ConnectionApprovalRequest, ConnectionApprovalResponse> connectionApprove);
         bool RemoveClient(ulong clientId, string message);
-        bool SendMessageToClients(List<ulong> clientId, string messageName, FastBufferWriter messageStream, NetworkDelivery networkDelivery = NetworkDelivery.Reliable);
+        bool SendMessageToClients(List<ulong> clientIds, string messageName, FastBufferWriter messageStream, NetworkDelivery networkDelivery = NetworkDelivery.Reliable);
         void SendMessageToAllClients(string messageName, FastBufferWriter messageStream, NetworkDelivery networkDelivery = NetworkDelivery.Reliable);
-        void RegisterMessageHandler(string messageName, HandleNamedMessageDelegate namedMessageHandler);
+        void RegisterMessageHandler(string messageName, HandleNamedMessageDelegate messageHandler);
         void UnregisterMessageHandler(string messageName);
     }
 }

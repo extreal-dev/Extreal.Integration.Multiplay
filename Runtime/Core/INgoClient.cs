@@ -15,10 +15,10 @@ namespace Extreal.Integration.Multiplay.NGO
         bool IsRunning { get; }
         bool IsConnected { get; }
 
-        UniTask ConnectAsync(ConnectionParameter connectParameter, CancellationToken token = default);
+        UniTask ConnectAsync(ConnectionParameter connectionParameter, CancellationToken token = default);
         UniTask DisconnectAsync();
         void SendMessage(string messageName, FastBufferWriter messageStream, NetworkDelivery networkDelivery = NetworkDelivery.Reliable);
-        void RegisterMessageHandler(string messageName, HandleNamedMessageDelegate namedMessageHandler);
+        void RegisterMessageHandler(string messageName, HandleNamedMessageDelegate messageHandler);
         void UnregisterMessageHandler(string messageName);
     }
 }

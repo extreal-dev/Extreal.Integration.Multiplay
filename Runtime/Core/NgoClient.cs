@@ -151,7 +151,7 @@ namespace Extreal.Integration.Multiplay.NGO
             networkManager.CustomMessagingManager.SendNamedMessage(messageName, NetworkManager.ServerClientId, messageStream, networkDelivery);
         }
 
-        public void RegisterMessageHandler(string messageName, HandleNamedMessageDelegate namedMessageHandler)
+        public void RegisterMessageHandler(string messageName, HandleNamedMessageDelegate messageHandler)
         {
             if (!IsConnected)
             {
@@ -162,7 +162,7 @@ namespace Extreal.Integration.Multiplay.NGO
                 throw new ArgumentNullException(nameof(messageName));
             }
 
-            networkManager.CustomMessagingManager.RegisterNamedMessageHandler(messageName, namedMessageHandler);
+            networkManager.CustomMessagingManager.RegisterNamedMessageHandler(messageName, messageHandler);
         }
 
         public void UnregisterMessageHandler(string messageName)

@@ -5,7 +5,6 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Extreal.Core.Logging;
 using Unity.Netcode;
-using static Extreal.Integration.Multiplay.NGO.INgoServer;
 using static Unity.Netcode.CustomMessagingManager;
 using static Unity.Netcode.NetworkManager;
 
@@ -26,7 +25,7 @@ namespace Extreal.Integration.Multiplay.NGO
 
         private readonly NetworkManager networkManager;
 
-        private ConnectionApprovalCallback connectionApprove;
+        private Action<ConnectionApprovalRequest, ConnectionApprovalResponse> connectionApprove;
 
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(NgoServer));
 
@@ -41,8 +40,11 @@ namespace Extreal.Integration.Multiplay.NGO
 
             this.networkManager = networkManager;
 
+            if (networkManager.NetworkConfig.ConnectionApproval)
+            {
+                networkManager.ConnectionApprovalCallback = (_, response) => response.Approved = true;
+            }
             networkManager.OnServerStarted += OnServerStartedEventHandler;
-            networkManager.ConnectionApprovalCallback += ConnectionApprovalEventHandler;
             networkManager.OnClientConnectedCallback += OnClientConnectedEventHandler;
             networkManager.OnClientDisconnectCallback += OnClientDisconnectEventHandler;
         }
@@ -58,8 +60,8 @@ namespace Extreal.Integration.Multiplay.NGO
             {
                 StopServerAsync().Forget();
             }
+            networkManager.ConnectionApprovalCallback = null;
             networkManager.OnServerStarted -= OnServerStartedEventHandler;
-            networkManager.ConnectionApprovalCallback -= ConnectionApprovalEventHandler;
             networkManager.OnClientConnectedCallback -= OnClientConnectedEventHandler;
             networkManager.OnClientDisconnectCallback -= OnClientDisconnectEventHandler;
         }
@@ -100,8 +102,14 @@ namespace Extreal.Integration.Multiplay.NGO
             await UniTask.WaitWhile(() => networkManager.ShutdownInProgress);
         }
 
-        public void SetConnectionApproval(ConnectionApprovalCallback connectionApprove)
-            => this.connectionApprove = connectionApprove;
+        public void SetConnectionApproval(Action<ConnectionApprovalRequest, ConnectionApprovalResponse> connectionApprove)
+        {
+            this.connectionApprove = connectionApprove;
+            if (networkManager.NetworkConfig.ConnectionApproval)
+            {
+                networkManager.ConnectionApprovalCallback = connectionApprove;
+            }
+        }
 
         public bool RemoveClient(ulong clientId, string message)
         {
@@ -183,7 +191,7 @@ namespace Extreal.Integration.Multiplay.NGO
             networkManager.CustomMessagingManager.SendNamedMessageToAll(messageName, messageStream, networkDelivery);
         }
 
-        public void RegisterMessageHandler(string messageName, HandleNamedMessageDelegate namedMessageHandler)
+        public void RegisterMessageHandler(string messageName, HandleNamedMessageDelegate messageHandler)
         {
             if (!IsRunning)
             {
@@ -194,7 +202,7 @@ namespace Extreal.Integration.Multiplay.NGO
                 throw new ArgumentNullException(nameof(messageName));
             }
 
-            networkManager.CustomMessagingManager.RegisterNamedMessageHandler(messageName, namedMessageHandler);
+            networkManager.CustomMessagingManager.RegisterNamedMessageHandler(messageName, messageHandler);
         }
 
         public void UnregisterMessageHandler(string messageName)
@@ -220,17 +228,6 @@ namespace Extreal.Integration.Multiplay.NGO
             }
 
             OnServerStarted?.Invoke();
-        }
-
-        private void ConnectionApprovalEventHandler(ConnectionApprovalRequest request, ConnectionApprovalResponse response)
-        {
-            var approved = true;
-            if (connectionApprove != null)
-            {
-                approved = connectionApprove.Invoke(request.ClientNetworkId, request.Payload);
-            }
-
-            response.Approved = approved;
         }
 
         private void OnClientConnectedEventHandler(ulong clientId)
