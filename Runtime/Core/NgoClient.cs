@@ -139,7 +139,7 @@ namespace Extreal.Integration.Multiplay.NGO
             {
                 throw new InvalidOperationException("Unable to send message to server because client is not running");
             }
-            if (messageName == null)
+            if (messageName is null)
             {
                 throw new ArgumentNullException(nameof(messageName));
             }
@@ -157,7 +157,7 @@ namespace Extreal.Integration.Multiplay.NGO
             {
                 throw new InvalidOperationException("Unable to register named message handler because client is not running");
             }
-            if (messageName == null)
+            if (messageName is null)
             {
                 throw new ArgumentNullException(nameof(messageName));
             }
@@ -171,8 +171,7 @@ namespace Extreal.Integration.Multiplay.NGO
             {
                 throw new InvalidOperationException("Unable to unregister named message handler because client is not running");
             }
-
-            if (messageName == null)
+            if (messageName is null)
             {
                 throw new ArgumentNullException(nameof(messageName));
             }

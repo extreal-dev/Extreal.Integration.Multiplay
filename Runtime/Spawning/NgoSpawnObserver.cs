@@ -9,10 +9,10 @@ namespace Extreal.Integration.Multiplay.NGO
 {
     public class NgoSpawnObserver : INgoSpawnObserver
     {
-        public IObservable<NetworkObject[]> OnSpawnAsObservable => spawnSubject;
+        public IObservable<NetworkObject[]> OnSpawnedAsObservable => spawnSubject;
         private readonly Subject<NetworkObject[]> spawnSubject = new Subject<NetworkObject[]>();
 
-        public IObservable<ulong[]> OnDespawnAsObservable => despawnSubject;
+        public IObservable<ulong[]> OnDespawnedAsObservable => despawnSubject;
         private readonly Subject<ulong[]> despawnSubject = new Subject<ulong[]>();
 
         private readonly NetworkSpawnManager spawnManager;

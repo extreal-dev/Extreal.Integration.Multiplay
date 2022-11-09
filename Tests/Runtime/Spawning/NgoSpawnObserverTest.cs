@@ -19,9 +19,9 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         private NetworkManager networkManager;
         private ServerMessagingHub serverMessagingHub;
 
-        private bool onSpawn;
+        private bool onSpawned;
         private NetworkObject[] onSpawnedObjects;
-        private bool onDespawn;
+        private bool onDespawned;
         private ulong[] onDespawnedObjects;
 
         private bool onClientConnected;
@@ -59,23 +59,23 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             serverMessagingHub.OnMessageReceived += OnMessageReceivedEventHandler;
 
             ngoSpawnObserver = new NgoSpawnObserver();
-            onSpawn = false;
+            onSpawned = false;
             onSpawnedObjects = Array.Empty<NetworkObject>();
-            onDespawn = false;
+            onDespawned = false;
             onDespawnedObjects = Array.Empty<ulong>();
 
-            _ = ngoSpawnObserver.OnSpawnAsObservable
+            _ = ngoSpawnObserver.OnSpawnedAsObservable
                 .Subscribe(networkObjs =>
                 {
-                    onSpawn = true;
+                    onSpawned = true;
                     onSpawnedObjects = networkObjs;
                 })
                 .AddTo(disposables);
 
-            _ = ngoSpawnObserver.OnDespawnAsObservable
+            _ = ngoSpawnObserver.OnDespawnedAsObservable
                 .Subscribe(objIds =>
                 {
-                    onDespawn = true;
+                    onDespawned = true;
                     onDespawnedObjects = objIds;
                 })
                 .AddTo(disposables);
@@ -115,7 +115,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
             var instance = NgoSpawnHelper.SpawnWithServerOwnership(networkObjectPrefab.gameObject);
             var networkObject = instance.GetComponent<NetworkObject>();
-            await UniTask.WaitUntil(() => onSpawn);
+            await UniTask.WaitUntil(() => onSpawned);
 
             Assert.IsTrue(onSpawnedObjects.Length == 1);
             Assert.AreSame(networkObject, onSpawnedObjects[0]);
@@ -123,7 +123,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
             var spawnedObjId = networkObject.NetworkObjectId;
             networkObject.Despawn();
-            await UniTask.WaitUntil(() => onDespawn);
+            await UniTask.WaitUntil(() => onDespawned);
 
             Assert.IsTrue(onDespawnedObjects.Length == 1);
             Assert.AreEqual(spawnedObjId, onDespawnedObjects[0]);

@@ -25,7 +25,7 @@ namespace Extreal.Integration.Multiplay.NGO
 
         private readonly NetworkManager networkManager;
 
-        private Action<ConnectionApprovalRequest, ConnectionApprovalResponse> connectionApprove;
+        private Action<ConnectionApprovalRequest, ConnectionApprovalResponse> connectionApprovalCallback;
 
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(NgoServer));
 
@@ -102,12 +102,12 @@ namespace Extreal.Integration.Multiplay.NGO
             await UniTask.WaitWhile(() => networkManager.ShutdownInProgress);
         }
 
-        public void SetConnectionApproval(Action<ConnectionApprovalRequest, ConnectionApprovalResponse> connectionApprove)
+        public void SetConnectionApprovalCallback(Action<ConnectionApprovalRequest, ConnectionApprovalResponse> connectionApprovalCallback)
         {
-            this.connectionApprove = connectionApprove;
+            this.connectionApprovalCallback = connectionApprovalCallback;
             if (networkManager.NetworkConfig.ConnectionApproval)
             {
-                networkManager.ConnectionApprovalCallback = connectionApprove;
+                networkManager.ConnectionApprovalCallback = connectionApprovalCallback;
             }
         }
 

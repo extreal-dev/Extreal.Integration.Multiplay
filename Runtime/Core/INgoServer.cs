@@ -21,7 +21,7 @@ namespace Extreal.Integration.Multiplay.NGO
 
         UniTask StartServerAsync(CancellationToken token = default);
         UniTask StopServerAsync();
-        void SetConnectionApproval(Action<ConnectionApprovalRequest, ConnectionApprovalResponse> connectionApprove);
+        void SetConnectionApprovalCallback(Action<ConnectionApprovalRequest, ConnectionApprovalResponse> connectionApprovalCallback);
         bool RemoveClient(ulong clientId, string message);
         bool SendMessageToClients(List<ulong> clientIds, string messageName, FastBufferWriter messageStream, NetworkDelivery networkDelivery = NetworkDelivery.Reliable);
         void SendMessageToAllClients(string messageName, FastBufferWriter messageStream, NetworkDelivery networkDelivery = NetworkDelivery.Reliable);
