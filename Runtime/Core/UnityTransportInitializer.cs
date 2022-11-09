@@ -4,8 +4,14 @@ using Unity.Netcode.Transports.UTP;
 
 namespace Extreal.Integration.Multiplay.NGO
 {
+    /// <summary>
+    /// Class that initializes NetworkTransport as UnityTransport
+    /// </summary>
     public class UnityTransportInitializer : INetworkTransportInitializer
     {
+        /// <inheritdoc/>
+        /// <exception cref="ArgumentNullException">If 'networkTransport' is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">If the type of 'networkTransport' is not UnityTransport.</exception>
         public void Initialize(NetworkTransport networkTransport, ConnectionConfig connectionConfig)
         {
             if (networkTransport == null)

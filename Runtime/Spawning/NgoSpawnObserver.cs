@@ -7,11 +7,16 @@ using Unity.Netcode;
 
 namespace Extreal.Integration.Multiplay.NGO
 {
+    /// <summary>
+    /// Class that observes to spawn/despawn NetworkObjects.
+    /// </summary>
     public class NgoSpawnObserver : INgoSpawnObserver
     {
+        /// <inheritdoc/>
         public IObservable<NetworkObject[]> OnSpawnedAsObservable => spawnSubject;
         private readonly Subject<NetworkObject[]> spawnSubject = new Subject<NetworkObject[]>();
 
+        /// <inheritdoc/>
         public IObservable<ulong[]> OnDespawnedAsObservable => despawnSubject;
         private readonly Subject<ulong[]> despawnSubject = new Subject<ulong[]>();
 
@@ -22,6 +27,9 @@ namespace Extreal.Integration.Multiplay.NGO
 
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(NgoSpawnObserver));
 
+        /// <summary>
+        /// Finalizes NgoSpawnObserver
+        /// </summary>
         public void Dispose()
         {
             if (Logger.IsDebug())
@@ -35,6 +43,7 @@ namespace Extreal.Integration.Multiplay.NGO
             GC.SuppressFinalize(this);
         }
 
+        /// <inheritdoc/>
         public void Clear()
         {
             if (Logger.IsDebug())
@@ -46,6 +55,8 @@ namespace Extreal.Integration.Multiplay.NGO
             beforeKeys = Array.Empty<ulong>();
         }
 
+        /// <inheritdoc/>
+        /// <exception cref="InvalidOperationException">NetworkManager does not exist or it is not yet running.</exception>
         public void Start()
         {
             if (NetworkManager.Singleton == null)

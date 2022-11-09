@@ -10,17 +10,31 @@ using static Unity.Netcode.NetworkManager;
 
 namespace Extreal.Integration.Multiplay.NGO
 {
+    /// <summary>
+    /// Class that handles NetworkManager as a server.
+    /// </summary>
     public class NgoServer : INgoServer
     {
+        /// <inheritdoc/>
         public bool IsRunning => networkManager != null && networkManager.IsServer;
+
+        /// <inheritdoc/>
         public IReadOnlyDictionary<ulong, NetworkClient> ConnectedClients
             => IsRunning ? networkManager.ConnectedClients : null;
 
+        /// <inheritdoc/>
         public event Action OnServerStarted;
+
+        /// <inheritdoc/>
         public event Action OnServerStopping;
 
+        /// <inheritdoc/>
         public event Action<ulong> OnClientConnected;
+
+        /// <inheritdoc/>
         public event Action<ulong> OnClientDisconnecting;
+
+        /// <inheritdoc/>
         public event Action<ulong, string> OnClientRemoving;
 
         private readonly NetworkManager networkManager;
@@ -29,6 +43,11 @@ namespace Extreal.Integration.Multiplay.NGO
 
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(NgoServer));
 
+        /// <summary>
+        /// Creates a new NgoServer with given networkManager.
+        /// </summary>
+        /// <param name="networkManager">NetworkManager to be used as a server.</param>
+        /// <exception cref="ArgumentNullException">If networkManager is null.</exception>
         public NgoServer(NetworkManager networkManager)
         {
 #pragma warning disable IDE0016
@@ -49,6 +68,9 @@ namespace Extreal.Integration.Multiplay.NGO
             networkManager.OnClientDisconnectCallback += OnClientDisconnectEventHandler;
         }
 
+        /// <summary>
+        /// Finalizes NgoServer.
+        /// </summary>
         public void Dispose()
         {
             if (Logger.IsDebug())
@@ -66,6 +88,9 @@ namespace Extreal.Integration.Multiplay.NGO
             networkManager.OnClientDisconnectCallback -= OnClientDisconnectEventHandler;
         }
 
+        /// <inheritdoc/>
+        /// <exception cref="InvalidOperationException">If this server is already running.</exception>
+        /// <exception cref="OperationCanceledException">If 'token' is canceled.</exception>
         public async UniTask StartServerAsync(CancellationToken token = default)
         {
             if (IsRunning)
@@ -84,6 +109,8 @@ namespace Extreal.Integration.Multiplay.NGO
             }
         }
 
+        /// <inheritdoc/>
+        /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
         public async UniTask StopServerAsync()
         {
             if (!IsRunning)
@@ -102,6 +129,7 @@ namespace Extreal.Integration.Multiplay.NGO
             await UniTask.WaitWhile(() => networkManager.ShutdownInProgress);
         }
 
+        /// <inheritdoc/>
         public void SetConnectionApprovalCallback(Action<ConnectionApprovalRequest, ConnectionApprovalResponse> connectionApprovalCallback)
         {
             this.connectionApprovalCallback = connectionApprovalCallback;
@@ -111,6 +139,8 @@ namespace Extreal.Integration.Multiplay.NGO
             }
         }
 
+        /// <inheritdoc/>
+        /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
         public bool RemoveClient(ulong clientId, string message)
         {
             if (!IsRunning)
@@ -133,6 +163,10 @@ namespace Extreal.Integration.Multiplay.NGO
             return true;
         }
 
+        /// <inheritdoc/>
+        /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
+        /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
+        /// <exception cref="ArgumentException">If 'messageStream' is not initialized.</exception>
         public bool SendMessageToClients
         (
             List<ulong> clientIds,
@@ -168,6 +202,10 @@ namespace Extreal.Integration.Multiplay.NGO
             return true;
         }
 
+        /// <inheritdoc/>
+        /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
+        /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
+        /// <exception cref="ArgumentException">If 'messageStream' is not initialized.</exception>
         public void SendMessageToAllClients
         (
             string messageName,
@@ -191,6 +229,9 @@ namespace Extreal.Integration.Multiplay.NGO
             networkManager.CustomMessagingManager.SendNamedMessageToAll(messageName, messageStream, networkDelivery);
         }
 
+        /// <inheritdoc/>
+        /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
+        /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
         public void RegisterMessageHandler(string messageName, HandleNamedMessageDelegate messageHandler)
         {
             if (!IsRunning)
@@ -205,6 +246,9 @@ namespace Extreal.Integration.Multiplay.NGO
             networkManager.CustomMessagingManager.RegisterNamedMessageHandler(messageName, messageHandler);
         }
 
+        /// <inheritdoc/>
+        /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
+        /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
         public void UnregisterMessageHandler(string messageName)
         {
             if (!IsRunning)

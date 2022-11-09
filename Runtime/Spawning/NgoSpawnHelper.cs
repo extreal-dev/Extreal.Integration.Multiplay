@@ -5,15 +5,31 @@ using static Unity.Netcode.NetworkObject;
 
 namespace Extreal.Integration.Multiplay.NGO
 {
+    /// <summary>
+    /// Class that spawns the NetworkObject.
+    /// </summary>
     public static class NgoSpawnHelper
     {
         private static VisibilityDelegate checkObjectVisibility;
 
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(NgoSpawnHelper));
 
+        /// <summary>
+        /// Sets VisibilityDelegate.
+        /// </summary>
+        /// <param name="visibilityDelegate">Used as CheckObjectVisibility for the spawned NetworkObject.</param>
         public static void SetVisibilityDelegate(VisibilityDelegate visibilityDelegate)
             => checkObjectVisibility = visibilityDelegate;
 
+        /// <summary>
+        /// Spawns NetworkObject owned by the server.
+        /// </summary>
+        /// <param name="prefab">GameObject to be spawned.</param>
+        /// <param name="position">Initial position of the GameObject when it is spawned.</param>
+        /// <param name="rotation">Initial rotation of the GameObject when it is spawned.</param>
+        /// <param name="parent">Parent to be set to the GameObject.</param>
+        /// <param name="worldPositionStays">If true, the world position, scale and rotation retain the same values as before. Otherwise, the local ones retain.</param>
+        /// <returns>Instantiated GameObject.</returns>
         public static GameObject SpawnWithServerOwnership
         (
             GameObject prefab,
@@ -24,6 +40,16 @@ namespace Extreal.Integration.Multiplay.NGO
         )
             => SpawnInternal(0, prefab, position, rotation, parent, worldPositionStays, SpawnType.ServerOwnership);
 
+        /// <summary>
+        /// Spawns NetworkObject owned by the client.
+        /// </summary>
+        /// <param name="ownerClientId">Id of client that owns the spawned NetworkObject.</param>
+        /// <param name="prefab">GameObject to be spawned.</param>
+        /// <param name="position">Initial position of the GameObject when it is spawned.</param>
+        /// <param name="rotation">Initial rotation of the GameObject when it is spawned.</param>
+        /// <param name="parent">Parent to be set to the GameObject.</param>
+        /// <param name="worldPositionStays">If true, the world position, scale and rotation retain the same values as before. Otherwise, the local ones retain.</param>
+        /// <returns>Instantiated GameObject.</returns>
         public static GameObject SpawnWithClientOwnership
         (
             ulong ownerClientId,
@@ -35,6 +61,16 @@ namespace Extreal.Integration.Multiplay.NGO
         )
             => SpawnInternal(ownerClientId, prefab, position, rotation, parent, worldPositionStays, SpawnType.ClientOwnership);
 
+        /// <summary>
+        /// Spawns NetworkObject as a player object.
+        /// </summary>
+        /// <param name="ownerClientId">Id of client that owns the spawned NetworkObject.</param>
+        /// <param name="prefab">GameObject to be spawned.</param>
+        /// <param name="position">Initial position of the GameObject when it is spawned.</param>
+        /// <param name="rotation">Initial rotation of the GameObject when it is spawned.</param>
+        /// <param name="parent">Parent to be set to the GameObject.</param>
+        /// <param name="worldPositionStays">If true, the world position, scale and rotation retain the same values as before. Otherwise, the local ones retain.</param>
+        /// <returns>Instantiated GameObject.</returns>
         public static GameObject SpawnAsPlayerObject
         (
             ulong ownerClientId,
