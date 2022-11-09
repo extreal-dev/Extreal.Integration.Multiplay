@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Extreal.Core.Logging;
@@ -17,19 +18,26 @@ namespace Extreal.Integration.Multiplay.NGO
         public event Action OnUnexpectedDisconnected;
 
         private readonly NetworkManager networkManager;
+        private readonly INetworkTransportInitializer networkTransportInitializer;
 
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(NgoClient));
 
-        public NgoClient(NetworkManager networkManager)
+        public NgoClient(NetworkManager networkManager, INetworkTransportInitializer networkTransportInitializer)
         {
 #pragma warning disable IDE0016
             if (networkManager == null)
             {
                 throw new ArgumentNullException(nameof(networkManager));
             }
+            if (networkTransportInitializer is null)
+            {
+                throw new ArgumentNullException(nameof(networkTransportInitializer));
+            }
 #pragma warning restore IDE0016
 
             this.networkManager = networkManager;
+            this.networkTransportInitializer = networkTransportInitializer;
+
             this.networkManager.OnClientConnectedCallback += OnClientConnectedEventHandler;
             this.networkManager.OnClientDisconnectCallback += OnClientDisconnectedEventHandler;
         }
@@ -63,6 +71,19 @@ namespace Extreal.Integration.Multiplay.NGO
             {
                 throw new ArgumentNullException(nameof(connectionParameter));
             }
+
+            var connectionConfig = connectionParameter.ConnectionConfig;
+            if (connectionConfig is null)
+            {
+                throw new ArgumentException($"The {nameof(connectionConfig)} in {nameof(connectionParameter)} must not be null");
+            }
+            if (!IPAddress.TryParse(connectionConfig.Address, out var _))
+            {
+                throw new ArgumentException($"Address in {nameof(connectionConfig)} is invalid");
+            }
+
+            var networkTransport = networkManager.NetworkConfig.NetworkTransport;
+            networkTransportInitializer.Initialize(networkTransport, connectionConfig);
 
             if (connectionParameter.ConnectionData is not null)
             {

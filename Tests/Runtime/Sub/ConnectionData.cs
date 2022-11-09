@@ -7,7 +7,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         public byte[] Serialize()
              => serializedData;
 
-        public void SetData(byte[] serializedData)
-            => this.serializedData = serializedData;
+        public void SetData(byte[] data)
+            => serializedData = data;
     }
 }

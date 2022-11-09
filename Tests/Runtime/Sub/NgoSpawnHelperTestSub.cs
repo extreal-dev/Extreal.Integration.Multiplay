@@ -25,7 +25,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             await SceneManager.LoadSceneAsync("TestNgoMain");
 
             networkManager = Object.FindObjectOfType<NetworkManager>();
-            ngoClient = new NgoClient(networkManager);
+            var networkTransportInitializer = new UnityTransportInitializer();
+            ngoClient = new NgoClient(networkManager, networkTransportInitializer);
 
             clientMassagingHub = new ClientMessagingHub(ngoClient);
             onMessageReceived = false;
@@ -46,7 +47,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTest]
         public IEnumerator SpawnWithServerOwnershipSub() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
 
             await UniTask.WaitUntil(() => onMessageReceived);
@@ -73,7 +75,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTest]
         public IEnumerator SpawnWithClientOwnershipSubFirst() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
 
             await UniTask.WaitUntil(() => onMessageReceived);
@@ -91,7 +94,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTest]
         public IEnumerator SpawnWithClientOwnershipSubSecond() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
 
             await UniTask.WaitUntil(() => onMessageReceived);
@@ -118,7 +122,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTest]
         public IEnumerator VisibilitySub() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
 
             await UniTask.WaitUntil(() => onMessageReceived);

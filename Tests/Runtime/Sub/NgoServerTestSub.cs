@@ -26,7 +26,9 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             await SceneManager.LoadSceneAsync("TestNgoMain");
 
             networkManager = UnityEngine.Object.FindObjectOfType<NetworkManager>();
-            ngoClient = new NgoClient(networkManager);
+            var networkTransportInitializer = new UnityTransportInitializer();
+
+            ngoClient = new NgoClient(networkManager, networkTransportInitializer);
             onUnexpectedDisconnected = false;
             ngoClient.OnUnexpectedDisconnected += OnUnexpectedDisconnectedEventHandler;
 
@@ -50,9 +52,10 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTest]
         public IEnumerator StartServerWithConnectionApprovalSub() => UniTask.ToCoroutine(async () =>
         {
+            var connectionConfig = ConnectionConfig.Default;
             var failedConnectionData = new ConnectionData();
             failedConnectionData.SetData(new byte[] { 1, 2, 3, 4 });
-            var failedConnectionParameter = new ConnectionParameter(failedConnectionData, 1);
+            var failedConnectionParameter = new ConnectionParameter(connectionConfig, failedConnectionData, 1);
 
             Exception exception = null;
             try
@@ -69,7 +72,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 
             var successConnectionData = new ConnectionData();
             successConnectionData.SetData(new byte[] { 3, 7, 7, 6 });
-            var successConnectionParameter = new ConnectionParameter(successConnectionData);
+            var successConnectionParameter = new ConnectionParameter(connectionConfig, successConnectionData);
             await ngoClient.ConnectAsync(successConnectionParameter);
             Assert.IsTrue(ngoClient.IsConnected);
         });
@@ -77,7 +80,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTest]
         public IEnumerator ConnectAndDisconnectClientsSub() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
             Assert.IsTrue(ngoClient.IsConnected);
         });
@@ -85,7 +89,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTest]
         public IEnumerator RemoveClientSub() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
             Assert.IsTrue(ngoClient.IsConnected);
 
@@ -95,7 +100,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTest]
         public IEnumerator SendMessageToClientsSub() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
             Assert.IsTrue(ngoClient.IsConnected);
 
@@ -109,7 +115,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTest]
         public IEnumerator SendMessageToAllClientsSubFirst() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
             Assert.IsTrue(ngoClient.IsConnected);
 
@@ -123,7 +130,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTest]
         public IEnumerator SendMessageToAllClientsSubSecond() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
             Assert.IsTrue(ngoClient.IsConnected);
 

@@ -7,7 +7,6 @@ using Extreal.Integration.Multiplay.NGO.Test.Sub;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Netcode;
-using Unity.Netcode.Transports.UTP;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
@@ -32,7 +31,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             await SceneManager.LoadSceneAsync("TestNgoMain");
 
             networkManager = UnityEngine.Object.FindObjectOfType<NetworkManager>();
-            ngoClient = new NgoClient(networkManager);
+            var networkTransportInitializer = new UnityTransportInitializer();
+            ngoClient = new NgoClient(networkManager, networkTransportInitializer);
 
             ngoClient.OnConnected += OnConnectedEventHandler;
             ngoClient.OnDisconnecting += OnDisconnectingEventHandler;
@@ -66,14 +66,21 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
         [Test]
         public void NewNgoClientWithNetworkManagerNull()
-        => Assert.That(() => _ = new NgoClient(null),
+        => Assert.That(() => _ = new NgoClient(null, new UnityTransportInitializer()),
                 Throws.TypeOf<ArgumentNullException>()
                     .With.Message.Contains(nameof(networkManager)));
+
+        [Test]
+        public void NewNgoClientWithNetworkTransportInitializerNull()
+        => Assert.That(() => _ = new NgoClient(networkManager, null),
+                Throws.TypeOf<ArgumentNullException>()
+                    .With.Message.Contains("networkTransportInitializer"));
 
         [UnityTest]
         public IEnumerator ConnectToServerSuccess() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
 
             Assert.IsFalse(onConnected);
             await ngoClient.ConnectAsync(connectionParameter);
@@ -85,9 +92,10 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator ConnectToServerWithConnectionData() => UniTask.ToCoroutine(async () =>
         {
+            var connectionConfig = ConnectionConfig.Default;
             var failedConnectionData = new ConnectionData();
             failedConnectionData.SetData(new byte[] { 1, 2, 3, 4 });
-            var failedConnectionParameter = new ConnectionParameter(failedConnectionData, 1);
+            var failedConnectionParameter = new ConnectionParameter(connectionConfig, failedConnectionData, 1);
 
             Exception exception = null;
             try
@@ -107,7 +115,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
             var successConnectionData = new ConnectionData();
             successConnectionData.SetData(new byte[] { 3, 7, 7, 6 });
-            var successConnectionParameter = new ConnectionParameter(successConnectionData);
+            var successConnectionParameter = new ConnectionParameter(connectionConfig, successConnectionData);
             await ngoClient.ConnectAsync(successConnectionParameter);
             Assert.IsTrue(ngoClient.IsConnected);
         });
@@ -118,7 +126,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             var result = networkManager.StartHost();
             Assert.IsTrue(result);
 
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
 
             Exception exception = null;
             try
@@ -137,7 +146,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator ConnectToServerTwice() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
             Assert.IsTrue(ngoClient.IsConnected);
 
@@ -175,11 +185,50 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         });
 
         [UnityTest]
+        public IEnumerator ConnectToServerWithConnectionConfigNull() => UniTask.ToCoroutine(async () =>
+        {
+            const ConnectionConfig nullConnectionConfig = null;
+            var connectionParameter = new ConnectionParameter(nullConnectionConfig);
+
+            Exception exception = null;
+            try
+            {
+                await ngoClient.ConnectAsync(connectionParameter);
+            }
+            catch (Exception e)
+            {
+                exception = e;
+            }
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(typeof(ArgumentException), exception.GetType());
+            Assert.AreEqual($"The connectionConfig in {nameof(connectionParameter)} must not be null", exception.Message);
+        });
+
+        [UnityTest]
+        public IEnumerator ConnectWithInvalidIpAddressForm() => UniTask.ToCoroutine(async () =>
+        {
+            var connectionConfig = new ConnectionConfig("256:0:0:1");
+            var connectionParameter = new ConnectionParameter(connectionConfig);
+
+            Exception exception = null;
+            try
+            {
+                await ngoClient.ConnectAsync(connectionParameter);
+            }
+            catch (Exception e)
+            {
+                exception = e;
+            }
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(typeof(ArgumentException), exception.GetType());
+            Assert.AreEqual($"Address in {nameof(connectionConfig)} is invalid", exception.Message);
+        });
+
+        [UnityTest]
         public IEnumerator ConnectToServerWithTimeoutException() => UniTask.ToCoroutine(async () =>
         {
-            var unityTransport = networkManager.NetworkConfig.NetworkTransport as UnityTransport;
-            unityTransport.ConnectionData.Port -= 1;
-            var connectionParameter = new ConnectionParameter(connectionTimeoutSeconds: 1);
+            var connectionConfig = new ConnectionConfig(port: 7776);
+            var connectionParameter = new ConnectionParameter(connectionConfig, connectionTimeoutSeconds: 1);
 
             Exception exception = null;
             try
@@ -200,9 +249,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         {
             var cancellationTokenSource = new CancellationTokenSource();
 
-            var unityTransport = networkManager.NetworkConfig.NetworkTransport as UnityTransport;
-            unityTransport.ConnectionData.Port -= 1;
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = new ConnectionConfig(port: 7776);
+            var connectionParameter = new ConnectionParameter(connectionConfig);
 
             Exception exception = null;
             try
@@ -222,7 +270,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator DisconnectFromServerSuccess() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
             Assert.IsTrue(ngoClient.IsConnected);
 
@@ -254,7 +303,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator StopServerBeforeDisconnect() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
             Assert.IsTrue(ngoClient.IsConnected);
 
@@ -264,7 +314,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator SendToServerSuccess() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
             Assert.IsTrue(ngoClient.IsConnected);
 
@@ -279,7 +330,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator SendToServerWithMessageNameNull() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
             Assert.IsTrue(ngoClient.IsConnected);
 
@@ -293,7 +345,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator SendToServerWithMessageStreamNotInitialized() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
             Assert.IsTrue(ngoClient.IsConnected);
 
@@ -313,7 +366,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator RegisterNamedMessageWithMessageNameNull() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
             Assert.IsTrue(ngoClient.IsConnected);
 
@@ -332,7 +386,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator UnregisterNamedMessageWithMessageNameNull() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
             Assert.IsTrue(ngoClient.IsConnected);
 
@@ -351,7 +406,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator UnregisterNamedMassageWithoutRegister() => UniTask.ToCoroutine(async () =>
         {
-            var connectionParameter = new ConnectionParameter();
+            var connectionConfig = ConnectionConfig.Default;
+            var connectionParameter = new ConnectionParameter(connectionConfig);
             await ngoClient.ConnectAsync(connectionParameter);
             Assert.IsTrue(ngoClient.IsConnected);
 
