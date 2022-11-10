@@ -3,6 +3,7 @@ using System.Net;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Extreal.Core.Logging;
+using UniRx;
 using Unity.Netcode;
 using static Unity.Netcode.CustomMessagingManager;
 
@@ -14,19 +15,22 @@ namespace Extreal.Integration.Multiplay.NGO
     public class NgoClient : INgoClient
     {
         /// <inheritdoc/>
+        public IObservable<Unit> OnConnected => onConnected;
+        private readonly Subject<Unit> onConnected = new Subject<Unit>();
+
+        /// <inheritdoc/>
+        public IObservable<Unit> OnDisconnecting => onDisconnecting;
+        private readonly Subject<Unit> onDisconnecting = new Subject<Unit>();
+
+        /// <inheritdoc/>
+        public IObservable<Unit> OnUnexpectedDisconnected => onUnexpectedDisconnected;
+        private readonly Subject<Unit> onUnexpectedDisconnected = new Subject<Unit>();
+
+        /// <inheritdoc/>
         public bool IsRunning => networkManager != null && networkManager.IsClient;
 
         /// <inheritdoc/>
         public bool IsConnected => networkManager != null && networkManager.IsConnectedClient;
-
-        /// <inheritdoc/>
-        public event Action OnConnected;
-
-        /// <inheritdoc/>
-        public event Action OnDisconnecting;
-
-        /// <inheritdoc/>
-        public event Action OnUnexpectedDisconnected;
 
         private readonly NetworkManager networkManager;
         private readonly INetworkTransportInitializer networkTransportInitializer;
@@ -75,6 +79,10 @@ namespace Extreal.Integration.Multiplay.NGO
             }
             networkManager.OnClientConnectedCallback -= OnClientConnectedEventHandler;
             networkManager.OnClientDisconnectCallback -= OnClientDisconnectedEventHandler;
+
+            onConnected.Dispose();
+            onDisconnecting.Dispose();
+            onUnexpectedDisconnected.Dispose();
         }
 
         /// <inheritdoc/>
@@ -150,7 +158,7 @@ namespace Extreal.Integration.Multiplay.NGO
                 Logger.LogDebug("The client will disconnect from server");
             }
 
-            OnDisconnecting?.Invoke();
+            onDisconnecting.OnNext(Unit.Default);
             networkManager.Shutdown();
 
             await UniTask.WaitWhile(() => networkManager.ShutdownInProgress);
@@ -230,7 +238,7 @@ namespace Extreal.Integration.Multiplay.NGO
                 Logger.LogDebug($"The client has connected to server");
             }
 
-            OnConnected?.Invoke();
+            onConnected.OnNext(Unit.Default);
         }
 
         private void OnClientDisconnectedEventHandler(ulong serverId)
@@ -240,7 +248,7 @@ namespace Extreal.Integration.Multiplay.NGO
                 Logger.LogDebug($"The client has disconnected from server");
             }
 
-            OnUnexpectedDisconnected?.Invoke();
+            onUnexpectedDisconnected.OnNext(Unit.Default);
         }
         #endregion
     }

@@ -5,6 +5,7 @@ using Cysharp.Threading.Tasks;
 using Extreal.Core.Logging;
 using Extreal.Integration.Multiplay.NGO.Test.Sub;
 using NUnit.Framework;
+using UniRx;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine.SceneManagement;
@@ -23,6 +24,9 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         private bool onUnexpectedDisconnected;
         private bool onMessageReceived;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeCracker", "CC0033")]
+        private readonly CompositeDisposable disposables = new CompositeDisposable();
+
         [UnitySetUp]
         public IEnumerator InitializeAsync() => UniTask.ToCoroutine(async () =>
         {
@@ -34,9 +38,17 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             var networkTransportInitializer = new UnityTransportInitializer();
             ngoClient = new NgoClient(networkManager, networkTransportInitializer);
 
-            ngoClient.OnConnected += OnConnectedEventHandler;
-            ngoClient.OnDisconnecting += OnDisconnectingEventHandler;
-            ngoClient.OnUnexpectedDisconnected += OnUnexpectedDisconnectedEventHandler;
+            _ = ngoClient.OnConnected
+                .Subscribe(_ => onConnected = true)
+                .AddTo(disposables);
+
+            _ = ngoClient.OnDisconnecting
+                .Subscribe(_ => onDisconnectingEventHandler = true)
+                .AddTo(disposables);
+
+            _ = ngoClient.OnUnexpectedDisconnected
+                .Subscribe(_ => onUnexpectedDisconnected = true)
+                .AddTo(disposables);
 
             onConnected = false;
             onDisconnectingEventHandler = false;
@@ -44,7 +56,9 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
             clientMassagingHub = new ClientMessagingHub(ngoClient);
 
-            clientMassagingHub.OnMessageReceived += OnMessageReceivedEventHandler;
+            _ = clientMassagingHub.OnMessageReceived
+                .Subscribe(_ => onMessageReceived = true)
+                .AddTo(disposables);
 
             onMessageReceived = false;
         });
@@ -52,17 +66,17 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTearDown]
         public IEnumerator DisposeAsync() => UniTask.ToCoroutine(async () =>
         {
-            clientMassagingHub.OnMessageReceived -= OnMessageReceivedEventHandler;
-            ngoClient.OnConnected -= OnConnectedEventHandler;
-            ngoClient.OnDisconnecting -= OnDisconnectingEventHandler;
-            ngoClient.OnUnexpectedDisconnected -= OnUnexpectedDisconnectedEventHandler;
-
             clientMassagingHub.Dispose();
             ngoClient.Dispose();
+            disposables.Clear();
 
             await UniTask.WaitUntil(() => !networkManager.ShutdownInProgress);
             UnityEngine.Object.Destroy(networkManager.gameObject);
         });
+
+        [OneTimeTearDown]
+        public void OneTimeDispose()
+            => disposables.Dispose();
 
         [Test]
         public void NewNgoClientWithNetworkManagerNull()
@@ -419,17 +433,5 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             await UniTask.Yield();
             cts.Cancel();
         }
-
-        private void OnConnectedEventHandler()
-            => onConnected = true;
-
-        private void OnDisconnectingEventHandler()
-            => onDisconnectingEventHandler = true;
-
-        private void OnUnexpectedDisconnectedEventHandler()
-            => onUnexpectedDisconnected = true;
-
-        private void OnMessageReceivedEventHandler()
-            => onMessageReceived = true;
     }
 }

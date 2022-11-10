@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using Extreal.Core.Logging;
+using UniRx;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -14,6 +15,9 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 
         private INgoServer ngoServer;
         private ServerMessagingHub serverMessagingHub;
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeCracker", "CC0033")]
+        private readonly CompositeDisposable disposables = new CompositeDisposable();
 
 #pragma warning disable CC0068
         private void Awake()
@@ -33,37 +37,38 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         {
             serverMessagingHub.Dispose();
             ngoServer.Dispose();
+            disposables.Dispose();
         }
 
         private void OnEnable()
-            => serverMessagingHub.OnMessageReceived += OnMessageReceivedEventHandler;
+            => serverMessagingHub.OnMessageReceived
+                .Subscribe(arg =>
+                {
+#pragma warning disable CC0120
+#pragma warning disable IDE0010
+                    switch (serverMessagingHub.ReceivedMessageName)
+                    {
+                        case MessageName.SPAWN_PLAYER_TO_SERVER:
+                        {
+                            _ = NgoSpawnHelper.SpawnAsPlayerObject(serverMessagingHub.ReceivedClientId, networkObjectPrefab.gameObject);
+                            break;
+                        }
+                        case MessageName.HELLO_WORLD_TO_SERVER:
+                        {
+                            _ = serverMessagingHub.SendHelloWorldToAllClients();
+                            break;
+                        }
+                    }
+#pragma warning disable IDE0010
+#pragma warning disable CC0120
+                })
+                .AddTo(disposables);
 
         private void OnDisable()
-            => serverMessagingHub.OnMessageReceived -= OnMessageReceivedEventHandler;
+            => disposables.Clear();
 
         private void Start()
             => ngoServer.StartServerAsync().Forget();
 #pragma warning restore CC0068
-
-        private void OnMessageReceivedEventHandler()
-        {
-#pragma warning disable CC0120
-#pragma warning disable IDE0010
-            switch (serverMessagingHub.ReceivedMessageName)
-            {
-                case MessageName.SPAWN_PLAYER_TO_SERVER:
-                {
-                    _ = NgoSpawnHelper.SpawnAsPlayerObject(serverMessagingHub.ReceivedClientId, networkObjectPrefab.gameObject);
-                    break;
-                }
-                case MessageName.HELLO_WORLD_TO_SERVER:
-                {
-                    _ = serverMessagingHub.SendHelloWorldToAllClients();
-                    break;
-                }
-            }
-#pragma warning disable IDE0010
-#pragma warning disable CC0120
-        }
     }
 }

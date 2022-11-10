@@ -5,6 +5,7 @@ using Cysharp.Threading.Tasks;
 using Extreal.Core.Logging;
 using Extreal.Integration.Multiplay.NGO.Test.Sub;
 using NUnit.Framework;
+using UniRx;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -23,6 +24,9 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         private ulong connectedClientId;
         private bool onClientDisconnecting;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeCracker", "CC0033")]
+        private CompositeDisposable disposables = new CompositeDisposable();
+
         [UnitySetUp]
         public IEnumerator InitializeAsync() => UniTask.ToCoroutine(async () =>
         {
@@ -39,8 +43,17 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             connectedClientId = 0;
             onClientDisconnecting = false;
 
-            ngoServer.OnClientConnected += OnClientConnectedEventHandler;
-            ngoServer.OnClientDisconnecting += OnClientDisconnectingEventHandler;
+            _ = ngoServer.OnClientConnected
+                .Subscribe(clientId =>
+                {
+                    onClientConnected = true;
+                    connectedClientId = clientId;
+                })
+                .AddTo(disposables);
+
+            _ = ngoServer.OnClientDisconnecting
+                .Subscribe(clientId => onClientDisconnecting = true)
+                .AddTo(disposables);
 
             serverMessagingHub = new ServerMessagingHub(ngoServer);
         });
@@ -48,15 +61,17 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTearDown]
         public IEnumerator DisposeAsync() => UniTask.ToCoroutine(async () =>
         {
-            ngoServer.OnClientConnected -= OnClientConnectedEventHandler;
-            ngoServer.OnClientDisconnecting -= OnClientDisconnectingEventHandler;
-
             serverMessagingHub.Dispose();
             ngoServer.Dispose();
+            disposables.Clear();
 
             await UniTask.WaitUntil(() => !networkManager.ShutdownInProgress);
             UnityEngine.Object.Destroy(networkManager.gameObject);
         });
+
+        [OneTimeTearDown]
+        public void OneTimeDispose()
+            => disposables.Dispose();
 
         [UnityTest]
         public IEnumerator SpawnWithServerOwnership() => UniTask.ToCoroutine(async () =>
@@ -216,14 +231,5 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             Assert.IsTrue(instance == null);
             LogAssert.Expect(LogType.Warning, $"[{Core.Logging.LogLevel.Warn}:{nameof(NgoSpawnHelper)}] GameObject without NetworkObject cannot be spawned");
         }
-
-        private void OnClientConnectedEventHandler(ulong clientId)
-        {
-            onClientConnected = true;
-            connectedClientId = clientId;
-        }
-
-        private void OnClientDisconnectingEventHandler(ulong clientId)
-            => onClientDisconnecting = true;
     }
 }

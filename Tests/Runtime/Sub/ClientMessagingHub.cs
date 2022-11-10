@@ -1,4 +1,5 @@
 using System;
+using UniRx;
 using Unity.Collections;
 using Unity.Netcode;
 
@@ -6,7 +7,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 {
     public class ClientMessagingHub : IDisposable
     {
-        public event Action OnMessageReceived;
+        public IObservable<Unit> OnMessageReceived => onMessageReceived;
+        private readonly Subject<Unit> onMessageReceived = new Subject<Unit>();
 
         public MessageName ReceivedMessageName { get; private set; }
         public string ReceivedMessageText { get; private set; }
@@ -16,17 +18,35 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 
         private readonly INgoClient ngoClient;
 
+        private readonly CompositeDisposable disposables = new CompositeDisposable();
+
         public ClientMessagingHub(INgoClient ngoClient)
         {
             this.ngoClient = ngoClient;
-            ngoClient.OnConnected += OnConnectedEventHandler;
-            ngoClient.OnDisconnecting += OnDisconnectingEventHandler;
+
+            _ = ngoClient.OnConnected
+                .Subscribe(_ =>
+                {
+                    ngoClient.RegisterMessageHandler(MessageName.HELLO_WORLD_TO_CLIENT.ToString(), ReceivedHelloWorldToClient);
+                    ngoClient.RegisterMessageHandler(MessageName.HELLO_WORLD_TO_ALL_CLIENTS.ToString(), ReceivedHelloWorldToAllClients);
+                    ngoClient.RegisterMessageHandler(MessageName.HELLO_WORLD_TO_ALL_CLIENTS_EXCEPT.ToString(), ReceivedHelloWorldToAllClientsExcept);
+                })
+                .AddTo(disposables);
+
+            _ = ngoClient.OnDisconnecting
+                .Subscribe(_ =>
+                {
+                    ngoClient.UnregisterMessageHandler(MessageName.HELLO_WORLD_TO_CLIENT.ToString());
+                    ngoClient.UnregisterMessageHandler(MessageName.HELLO_WORLD_TO_ALL_CLIENTS.ToString());
+                    ngoClient.UnregisterMessageHandler(MessageName.HELLO_WORLD_TO_ALL_CLIENTS_EXCEPT.ToString());
+                })
+                .AddTo(disposables);
         }
 
         public void Dispose()
         {
-            ngoClient.OnConnected -= OnConnectedEventHandler;
-            ngoClient.OnDisconnecting -= OnDisconnectingEventHandler;
+            onMessageReceived.Dispose();
+            disposables.Dispose();
             GC.SuppressFinalize(this);
         }
 
@@ -85,21 +105,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             reader.ReadValueSafe(out string message);
             ReceivedMessageText = message;
 
-            OnMessageReceived?.Invoke();
-        }
-
-        private void OnConnectedEventHandler()
-        {
-            ngoClient.RegisterMessageHandler(MessageName.HELLO_WORLD_TO_CLIENT.ToString(), ReceivedHelloWorldToClient);
-            ngoClient.RegisterMessageHandler(MessageName.HELLO_WORLD_TO_ALL_CLIENTS.ToString(), ReceivedHelloWorldToAllClients);
-            ngoClient.RegisterMessageHandler(MessageName.HELLO_WORLD_TO_ALL_CLIENTS_EXCEPT.ToString(), ReceivedHelloWorldToAllClientsExcept);
-        }
-
-        private void OnDisconnectingEventHandler()
-        {
-            ngoClient.UnregisterMessageHandler(MessageName.HELLO_WORLD_TO_CLIENT.ToString());
-            ngoClient.UnregisterMessageHandler(MessageName.HELLO_WORLD_TO_ALL_CLIENTS.ToString());
-            ngoClient.UnregisterMessageHandler(MessageName.HELLO_WORLD_TO_ALL_CLIENTS_EXCEPT.ToString());
+            onMessageReceived.OnNext(Unit.Default);
         }
     }
 }

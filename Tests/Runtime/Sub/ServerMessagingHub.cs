@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UniRx;
 using Unity.Collections;
 using Unity.Netcode;
 
@@ -7,7 +8,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 {
     public class ServerMessagingHub : IDisposable
     {
-        public event Action OnMessageReceived;
+        public IObservable<Unit> OnMessageReceived => onMessageReceived;
+        private readonly Subject<Unit> onMessageReceived = new Subject<Unit>();
 
         public List<ulong> SendClientIds { get; private set; } = new List<ulong>();
         public ulong ReceivedClientId { get; private set; }
@@ -19,18 +21,33 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         public string SendMessageText { get; private set; }
 
         private readonly INgoServer ngoServer;
+        private readonly CompositeDisposable disposables = new CompositeDisposable();
 
         public ServerMessagingHub(INgoServer ngoServer)
         {
             this.ngoServer = ngoServer;
-            ngoServer.OnServerStarted += OnServerStartedEventHandler;
-            ngoServer.OnServerStopping += OnServerStoppingEventHandler;
+
+            _ = ngoServer.OnServerStarted
+                .Subscribe(_ =>
+                {
+                    ngoServer.RegisterMessageHandler(MessageName.SPAWN_PLAYER_TO_SERVER.ToString(), ReceivedSpawnPlayer);
+                    ngoServer.RegisterMessageHandler(MessageName.HELLO_WORLD_TO_SERVER.ToString(), ReceivedHelloWorld);
+                })
+                .AddTo(disposables);
+
+            _ = ngoServer.OnServerStopping
+                .Subscribe(_ =>
+                {
+                    ngoServer.UnregisterMessageHandler(MessageName.SPAWN_PLAYER_TO_SERVER.ToString());
+                    ngoServer.UnregisterMessageHandler(MessageName.HELLO_WORLD_TO_SERVER.ToString());
+                })
+                .AddTo(disposables);
         }
 
         public void Dispose()
         {
-            ngoServer.OnServerStarted -= OnServerStartedEventHandler;
-            ngoServer.OnServerStopping -= OnServerStoppingEventHandler;
+            onMessageReceived.Dispose();
+            disposables.Dispose();
             GC.SuppressFinalize(this);
         }
 
@@ -63,7 +80,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             reader.ReadValueSafe(out string message);
             ReceivedMessageText = message;
 
-            OnMessageReceived?.Invoke();
+            onMessageReceived.OnNext(Unit.Default);
         }
 
         public bool SendHelloWorldToClients(List<ulong> clientIds)
@@ -102,17 +119,6 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
                     throw new Exception("Unexpected Case");
                 }
             }
-        }
-
-        private void OnServerStartedEventHandler()
-        {
-            ngoServer.RegisterMessageHandler(MessageName.SPAWN_PLAYER_TO_SERVER.ToString(), ReceivedSpawnPlayer);
-            ngoServer.RegisterMessageHandler(MessageName.HELLO_WORLD_TO_SERVER.ToString(), ReceivedHelloWorld);
-        }
-        private void OnServerStoppingEventHandler()
-        {
-            ngoServer.UnregisterMessageHandler(MessageName.SPAWN_PLAYER_TO_SERVER.ToString());
-            ngoServer.UnregisterMessageHandler(MessageName.HELLO_WORLD_TO_SERVER.ToString());
         }
 
         private enum SendType

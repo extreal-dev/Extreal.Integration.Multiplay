@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UniRx;
 using Unity.Netcode;
 using static Unity.Netcode.CustomMessagingManager;
 
@@ -14,17 +15,17 @@ namespace Extreal.Integration.Multiplay.NGO
         /// <summary>
         /// Invokes immediately after connecting to the server.
         /// </summary>
-        event Action OnConnected;
+        IObservable<Unit> OnConnected { get; }
 
         /// <summary>
         /// Invokes just before disconnection from the server.
         /// </summary>
-        event Action OnDisconnecting;
+        IObservable<Unit> OnDisconnecting { get; }
 
         /// <summary>
         /// Invokes immediately after an unexpected disconnection from the server.
         /// </summary>
-        event Action OnUnexpectedDisconnected;
+        IObservable<Unit> OnUnexpectedDisconnected { get; }
 
         /// <summary>
         /// Gets if this client is running or not.

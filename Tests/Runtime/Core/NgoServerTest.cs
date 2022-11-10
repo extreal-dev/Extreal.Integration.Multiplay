@@ -7,6 +7,7 @@ using Cysharp.Threading.Tasks;
 using Extreal.Core.Logging;
 using Extreal.Integration.Multiplay.NGO.Test.Sub;
 using NUnit.Framework;
+using UniRx;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine.SceneManagement;
@@ -35,6 +36,9 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
         private bool onMessageReceived;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeCracker", "CC0033")]
+        private CompositeDisposable disposables = new CompositeDisposable();
+
         [UnitySetUp]
         public IEnumerator InitializeAsync() => UniTask.ToCoroutine(async () =>
         {
@@ -44,12 +48,6 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
             networkManager = UnityEngine.Object.FindObjectOfType<NetworkManager>();
             ngoServer = new NgoServer(networkManager);
-
-            ngoServer.OnServerStarted += OnServerStartedEventHandler;
-            ngoServer.OnServerStopping += OnServerStoppingEventHandler;
-            ngoServer.OnClientConnected += OnClientConnectedEventHandler;
-            ngoServer.OnClientDisconnecting += OnClientDisconnectingEventHandler;
-            ngoServer.OnClientRemoving += OnClientRemovingEventHandler;
 
             onServerStarted = false;
             onServerStopping = false;
@@ -61,25 +59,53 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             removingClientId = 0;
             clientRemovingMessage = null;
 
+            _ = ngoServer.OnServerStarted
+                .Subscribe(_ => onServerStarted = true)
+                .AddTo(disposables);
+
+            _ = ngoServer.OnServerStopping
+                .Subscribe(_ => onServerStopping = true)
+                .AddTo(disposables);
+
+            _ = ngoServer.OnClientConnected
+                .Subscribe(clientId =>
+                {
+                    onClientConnected = true;
+                    connectedClientId = clientId;
+                })
+                .AddTo(disposables);
+
+            _ = ngoServer.OnClientDisconnecting
+                .Subscribe(clientId =>
+                {
+                    onClientDisconnecting = true;
+                    disconnectingClientId = clientId;
+                })
+                .AddTo(disposables);
+
+            _ = ngoServer.OnClientRemoving
+                .Subscribe(arg =>
+                {
+                    onClientRemoving = true;
+                    removingClientId = arg.clientId;
+                    clientRemovingMessage = arg.message;
+                })
+                .AddTo(disposables);
+
             serverMessagingHub = new ServerMessagingHub(ngoServer);
-
-            serverMessagingHub.OnMessageReceived += OnMessageReceivedEventHandler;
-
             onMessageReceived = false;
+
+            _ = serverMessagingHub.OnMessageReceived
+                .Subscribe(_ => onMessageReceived = true)
+                .AddTo(disposables);
         });
 
         [UnityTearDown]
         public IEnumerator DisposeAsync() => UniTask.ToCoroutine(async () =>
         {
-            serverMessagingHub.OnMessageReceived -= OnMessageReceivedEventHandler;
-            ngoServer.OnServerStarted -= OnServerStartedEventHandler;
-            ngoServer.OnServerStopping -= OnServerStoppingEventHandler;
-            ngoServer.OnClientConnected -= OnClientConnectedEventHandler;
-            ngoServer.OnClientDisconnecting -= OnClientDisconnectingEventHandler;
-            ngoServer.OnClientRemoving -= OnClientRemovingEventHandler;
-
             serverMessagingHub.Dispose();
             ngoServer.Dispose();
+            disposables.Clear();
 
             if (networkManager != null)
             {
@@ -88,6 +114,9 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             }
         });
 
+        [OneTimeTearDown]
+        public void OneTimeDispose()
+            => disposables.Dispose();
 
         [Test]
         public void NewNgoServerWithNetworkManagerNull()
@@ -432,33 +461,5 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             await UniTask.Yield();
             cts.Cancel();
         }
-
-        private void OnServerStartedEventHandler()
-            => onServerStarted = true;
-
-        private void OnServerStoppingEventHandler()
-            => onServerStopping = true;
-
-        private void OnClientConnectedEventHandler(ulong clientId)
-        {
-            onClientConnected = true;
-            connectedClientId = clientId;
-        }
-
-        private void OnClientDisconnectingEventHandler(ulong clientId)
-        {
-            onClientDisconnecting = true;
-            disconnectingClientId = clientId;
-        }
-
-        private void OnClientRemovingEventHandler(ulong clientId, string message)
-        {
-            onClientRemoving = true;
-            removingClientId = clientId;
-            clientRemovingMessage = message;
-        }
-
-        private void OnMessageReceivedEventHandler()
-            => onMessageReceived = true;
     }
 }

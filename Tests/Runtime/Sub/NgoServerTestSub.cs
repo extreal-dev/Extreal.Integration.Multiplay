@@ -3,6 +3,7 @@ using System.Collections;
 using Cysharp.Threading.Tasks;
 using Extreal.Core.Logging;
 using NUnit.Framework;
+using UniRx;
 using Unity.Netcode;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -18,6 +19,9 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         private bool onUnexpectedDisconnected;
         private bool onMessageReceived;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeCracker", "CC0033")]
+        private readonly CompositeDisposable disposables = new CompositeDisposable();
+
         [UnitySetUp]
         public IEnumerator InitializeAsync() => UniTask.ToCoroutine(async () =>
         {
@@ -30,24 +34,30 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 
             ngoClient = new NgoClient(networkManager, networkTransportInitializer);
             onUnexpectedDisconnected = false;
-            ngoClient.OnUnexpectedDisconnected += OnUnexpectedDisconnectedEventHandler;
+            _ = ngoClient.OnUnexpectedDisconnected
+                .Subscribe(_ => onUnexpectedDisconnected = true)
+                .AddTo(disposables);
 
             clientMassagingHub = new ClientMessagingHub(ngoClient);
             onMessageReceived = false;
-            clientMassagingHub.OnMessageReceived += OnMessageReceivedEventHandler;
+            _ = clientMassagingHub.OnMessageReceived
+                .Subscribe(_ => onMessageReceived = true)
+                .AddTo(disposables);
         });
 
         [UnityTearDown]
         public IEnumerator DisposeAsync() => UniTask.ToCoroutine(async () =>
         {
-            clientMassagingHub.OnMessageReceived -= OnMessageReceivedEventHandler;
-            ngoClient.OnUnexpectedDisconnected -= OnUnexpectedDisconnectedEventHandler;
-
             clientMassagingHub.Dispose();
             ngoClient.Dispose();
+            disposables.Clear();
 
             await UniTask.Yield();
         });
+
+        [OneTimeTearDown]
+        public void OneTimeDispose()
+            => disposables.Dispose();
 
         [UnityTest]
         public IEnumerator StartServerWithConnectionApprovalSub() => UniTask.ToCoroutine(async () =>
@@ -142,11 +152,5 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             await UniTask.Delay(TimeSpan.FromSeconds(1));
             clientMassagingHub.SendHelloWorldToServer();
         });
-
-        private void OnUnexpectedDisconnectedEventHandler()
-            => onUnexpectedDisconnected = true;
-
-        private void OnMessageReceivedEventHandler()
-            => onMessageReceived = true;
     }
 }

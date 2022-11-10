@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UniRx;
 using Unity.Netcode;
 using static Unity.Netcode.CustomMessagingManager;
 using static Unity.Netcode.NetworkManager;
@@ -16,27 +17,27 @@ namespace Extreal.Integration.Multiplay.NGO
         /// <summary>
         /// Invokes immediately after this server starts.
         /// </summary>
-        event Action OnServerStarted;
+        IObservable<Unit> OnServerStarted { get; }
 
         /// <summary>
         /// Invokes just before this server stops.
         /// </summary>
-        event Action OnServerStopping;
+        IObservable<Unit> OnServerStopping { get; }
 
         /// <summary>
         /// Invokes immediately after the client connects to this server.
         /// </summary>
-        event Action<ulong> OnClientConnected;
+        IObservable<ulong> OnClientConnected { get; }
 
         /// <summary>
         /// Invokes just before the client disconnects from this server.
         /// </summary>
-        event Action<ulong> OnClientDisconnecting;
+        IObservable<ulong> OnClientDisconnecting { get; }
 
         /// <summary>
         /// Invokes just before removing the client.
         /// </summary>
-        event Action<ulong, string> OnClientRemoving;
+        IObservable<(ulong clientId, string message)> OnClientRemoving { get; }
 
         /// <summary>
         /// Gets if this server is running or not.

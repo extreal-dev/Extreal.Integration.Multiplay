@@ -2,6 +2,7 @@ using System.Collections;
 using Cysharp.Threading.Tasks;
 using Extreal.Core.Logging;
 using NUnit.Framework;
+using UniRx;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -17,6 +18,9 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 
         private bool onMessageReceived;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeCracker", "CC0033")]
+        private readonly CompositeDisposable disposables = new CompositeDisposable();
+
         [UnitySetUp]
         public IEnumerator InitializeAsync() => UniTask.ToCoroutine(async () =>
         {
@@ -30,19 +34,24 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 
             clientMassagingHub = new ClientMessagingHub(ngoClient);
             onMessageReceived = false;
-            clientMassagingHub.OnMessageReceived += OnMessageReceivedEventHandler;
+            _ = clientMassagingHub.OnMessageReceived
+                .Subscribe(_ => onMessageReceived = true)
+                .AddTo(disposables);
         });
 
         [UnityTearDown]
         public IEnumerator DisposeAsync() => UniTask.ToCoroutine(async () =>
         {
-            clientMassagingHub.OnMessageReceived -= OnMessageReceivedEventHandler;
-
             clientMassagingHub.Dispose();
             ngoClient.Dispose();
+            disposables.Clear();
 
             await UniTask.Yield();
         });
+
+        [OneTimeTearDown]
+        public void OneTimeDispose()
+            => disposables.Dispose();
 
         [UnityTest]
         public IEnumerator SpawnWithServerOwnershipSub() => UniTask.ToCoroutine(async () =>
@@ -152,8 +161,5 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTest]
         public IEnumerator SpawnAsPlayerObjectSubSecond()
             => SpawnWithClientOwnershipSubSecond();
-
-        private void OnMessageReceivedEventHandler()
-            => onMessageReceived = true;
     }
 }

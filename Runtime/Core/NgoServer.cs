@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Extreal.Core.Logging;
+using UniRx;
 using Unity.Netcode;
 using static Unity.Netcode.CustomMessagingManager;
 using static Unity.Netcode.NetworkManager;
@@ -16,26 +17,32 @@ namespace Extreal.Integration.Multiplay.NGO
     public class NgoServer : INgoServer
     {
         /// <inheritdoc/>
+        public IObservable<Unit> OnServerStarted => onServerStarted;
+        private readonly Subject<Unit> onServerStarted = new Subject<Unit>();
+
+        /// <inheritdoc/>
+        public IObservable<Unit> OnServerStopping => onServerStopping;
+        private readonly Subject<Unit> onServerStopping = new Subject<Unit>();
+
+        /// <inheritdoc/>
+        public IObservable<ulong> OnClientConnected => onClientConnected;
+        private readonly Subject<ulong> onClientConnected = new Subject<ulong>();
+
+        /// <inheritdoc/>
+        public IObservable<ulong> OnClientDisconnecting => onClientDisconnecting;
+        private readonly Subject<ulong> onClientDisconnecting = new Subject<ulong>();
+
+        /// <inheritdoc/>
+        public IObservable<(ulong clientId, string message)> OnClientRemoving => onClientRemoving;
+        private readonly Subject<(ulong clientId, string message)> onClientRemoving
+            = new Subject<(ulong clientId, string message)>();
+
+        /// <inheritdoc/>
         public bool IsRunning => networkManager != null && networkManager.IsServer;
 
         /// <inheritdoc/>
         public IReadOnlyDictionary<ulong, NetworkClient> ConnectedClients
             => IsRunning ? networkManager.ConnectedClients : null;
-
-        /// <inheritdoc/>
-        public event Action OnServerStarted;
-
-        /// <inheritdoc/>
-        public event Action OnServerStopping;
-
-        /// <inheritdoc/>
-        public event Action<ulong> OnClientConnected;
-
-        /// <inheritdoc/>
-        public event Action<ulong> OnClientDisconnecting;
-
-        /// <inheritdoc/>
-        public event Action<ulong, string> OnClientRemoving;
 
         private readonly NetworkManager networkManager;
 
@@ -86,6 +93,12 @@ namespace Extreal.Integration.Multiplay.NGO
             networkManager.OnServerStarted -= OnServerStartedEventHandler;
             networkManager.OnClientConnectedCallback -= OnClientConnectedEventHandler;
             networkManager.OnClientDisconnectCallback -= OnClientDisconnectEventHandler;
+
+            onServerStarted.Dispose();
+            onServerStopping.Dispose();
+            onClientConnected.Dispose();
+            onClientDisconnecting.Dispose();
+            onClientRemoving.Dispose();
         }
 
         /// <inheritdoc/>
@@ -123,7 +136,7 @@ namespace Extreal.Integration.Multiplay.NGO
                 Logger.LogDebug("The server will stop");
             }
 
-            OnServerStopping?.Invoke();
+            onServerStopping.OnNext(Unit.Default);
             networkManager.Shutdown();
 
             await UniTask.WaitWhile(() => networkManager.ShutdownInProgress);
@@ -157,7 +170,7 @@ namespace Extreal.Integration.Multiplay.NGO
                 return false;
             }
 
-            OnClientRemoving?.Invoke(clientId, message);
+            onClientRemoving.OnNext((clientId, message));
             networkManager.DisconnectClient(clientId);
 
             return true;
@@ -271,7 +284,7 @@ namespace Extreal.Integration.Multiplay.NGO
                 Logger.LogDebug($"The server has started");
             }
 
-            OnServerStarted?.Invoke();
+            onServerStarted.OnNext(Unit.Default);
         }
 
         private void OnClientConnectedEventHandler(ulong clientId)
@@ -281,7 +294,7 @@ namespace Extreal.Integration.Multiplay.NGO
                 Logger.LogDebug($"The client with client id {clientId} has connected");
             }
 
-            OnClientConnected?.Invoke(clientId);
+            onClientConnected.OnNext(clientId);
         }
 
         private void OnClientDisconnectEventHandler(ulong clientId)
@@ -291,7 +304,7 @@ namespace Extreal.Integration.Multiplay.NGO
                 Logger.LogDebug($"The client with client id {clientId} will disconnect");
             }
 
-            OnClientDisconnecting?.Invoke(clientId);
+            onClientDisconnecting.OnNext(clientId);
         }
         #endregion
     }
