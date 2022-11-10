@@ -22,8 +22,6 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         private bool onClientConnected;
         private ulong connectedClientId;
         private bool onClientDisconnecting;
-        private ulong disconnectingClientId;
-        private bool onMessageReceived;
 
         [UnitySetUp]
         public IEnumerator InitializeAsync() => UniTask.ToCoroutine(async () =>
@@ -40,21 +38,16 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             onClientConnected = false;
             connectedClientId = 0;
             onClientDisconnecting = false;
-            disconnectingClientId = 0;
 
             ngoServer.OnClientConnected += OnClientConnectedEventHandler;
             ngoServer.OnClientDisconnecting += OnClientDisconnectingEventHandler;
 
             serverMessagingHub = new ServerMessagingHub(ngoServer);
-            onMessageReceived = false;
-
-            serverMessagingHub.OnMessageReceived += OnMessageReceivedEventHandler;
         });
 
         [UnityTearDown]
         public IEnumerator DisposeAsync() => UniTask.ToCoroutine(async () =>
         {
-            serverMessagingHub.OnMessageReceived -= OnMessageReceivedEventHandler;
             ngoServer.OnClientConnected -= OnClientConnectedEventHandler;
             ngoServer.OnClientDisconnecting -= OnClientDisconnectingEventHandler;
 
@@ -231,12 +224,6 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         }
 
         private void OnClientDisconnectingEventHandler(ulong clientId)
-        {
-            onClientDisconnecting = true;
-            disconnectingClientId = clientId;
-        }
-
-        private void OnMessageReceivedEventHandler()
-            => onMessageReceived = true;
+            => onClientDisconnecting = true;
     }
 }

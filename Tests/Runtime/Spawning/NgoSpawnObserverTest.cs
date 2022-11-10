@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using Cysharp.Threading.Tasks;
 using Extreal.Core.Logging;
-using Extreal.Integration.Multiplay.NGO.Test.Sub;
 using NUnit.Framework;
 using UniRx;
 using Unity.Netcode;
@@ -17,18 +16,11 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         private NgoServer ngoServer;
         private NetworkObject networkObjectPrefab;
         private NetworkManager networkManager;
-        private ServerMessagingHub serverMessagingHub;
 
         private bool onSpawned;
         private NetworkObject[] onSpawnedObjects;
         private bool onDespawned;
         private ulong[] onDespawnedObjects;
-
-        private bool onClientConnected;
-        private ulong connectedClientId;
-        private bool onClientDisconnecting;
-        private ulong disconnectingClientId;
-        private bool onMessageReceived;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeCracker", "CC0033")]
         private readonly CompositeDisposable disposables = new CompositeDisposable();
@@ -45,18 +37,6 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
             networkManager = UnityEngine.Object.FindObjectOfType<NetworkManager>();
             ngoServer = new NgoServer(networkManager);
-            onClientConnected = false;
-            connectedClientId = 0;
-            onClientDisconnecting = false;
-            disconnectingClientId = 0;
-
-            ngoServer.OnClientConnected += OnClientConnectedEventHandler;
-            ngoServer.OnClientDisconnecting += OnClientDisconnectingEventHandler;
-
-            serverMessagingHub = new ServerMessagingHub(ngoServer);
-            onMessageReceived = false;
-
-            serverMessagingHub.OnMessageReceived += OnMessageReceivedEventHandler;
 
             ngoSpawnObserver = new NgoSpawnObserver();
             onSpawned = false;
@@ -84,13 +64,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTearDown]
         public IEnumerator DisposeAsync() => UniTask.ToCoroutine(async () =>
         {
-            serverMessagingHub.OnMessageReceived -= OnMessageReceivedEventHandler;
-            ngoServer.OnClientConnected -= OnClientConnectedEventHandler;
-            ngoServer.OnClientDisconnecting -= OnClientDisconnectingEventHandler;
-
             disposables.Clear();
             ngoSpawnObserver.Clear();
-            serverMessagingHub.Dispose();
             ngoServer.Dispose();
 
             if (networkManager != null)
@@ -144,20 +119,5 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             => Assert.That(() => ngoSpawnObserver.Start(),
                 Throws.TypeOf<InvalidOperationException>()
                     .With.Message.EqualTo($"{nameof(NetworkManager)} must be connected to server or listening before start"));
-
-        private void OnClientConnectedEventHandler(ulong clientId)
-        {
-            onClientConnected = true;
-            connectedClientId = clientId;
-        }
-
-        private void OnClientDisconnectingEventHandler(ulong clientId)
-        {
-            onClientDisconnecting = true;
-            disconnectingClientId = clientId;
-        }
-
-        private void OnMessageReceivedEventHandler()
-            => onMessageReceived = true;
     }
 }
