@@ -83,22 +83,22 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             onMessageReceived.OnNext(Unit.Default);
         }
 
-        public bool SendHelloWorldToClients(List<ulong> clientIds)
+        public void SendHelloWorldToClients(List<ulong> clientIds)
         {
             SendClientIds = clientIds;
             SendMessageName = MessageName.HELLO_WORLD_TO_CLIENT;
             SendMessageText = "Hello World";
-            return SendInternal(SendType.ToClient);
+            SendInternal(SendType.ToClient);
         }
 
-        public bool SendHelloWorldToAllClients()
+        public void SendHelloWorldToAllClients()
         {
             SendMessageName = MessageName.HELLO_WORLD_TO_ALL_CLIENTS;
             SendMessageText = "Hello World";
-            return SendInternal(SendType.ToAllClients);
+            SendInternal(SendType.ToAllClients);
         }
 
-        private bool SendInternal(SendType sendType)
+        private void SendInternal(SendType sendType)
         {
             using var messageStream = new FastBufferWriter(FixedString64Bytes.UTF8MaxLengthInBytes, Allocator.Temp);
             messageStream.WriteValueSafe(SendMessageText);
@@ -107,12 +107,13 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             {
                 case SendType.ToClient:
                 {
-                    return ngoServer.SendMessageToClients(SendClientIds, SendMessageName.ToString(), messageStream);
+                    ngoServer.SendMessageToClients(SendClientIds, SendMessageName.ToString(), messageStream);
+                    break;
                 }
                 case SendType.ToAllClients:
                 {
                     ngoServer.SendMessageToAllClients(SendMessageName.ToString(), messageStream);
-                    return true;
+                    break;
                 }
                 default:
                 {

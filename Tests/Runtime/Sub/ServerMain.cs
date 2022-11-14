@@ -24,7 +24,6 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         {
             LoggingManager.Initialize(Core.Logging.LogLevel.Debug);
 
-            var networkManager = FindObjectOfType<NetworkManager>();
             ngoServer = new NgoServer(networkManager);
             serverMessagingHub = new ServerMessagingHub(ngoServer);
 
@@ -50,12 +49,12 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
                     {
                         case MessageName.SPAWN_PLAYER_TO_SERVER:
                         {
-                            _ = NgoSpawnHelper.SpawnAsPlayerObject(serverMessagingHub.ReceivedClientId, networkObjectPrefab.gameObject);
+                            _ = ngoServer.SpawnAsPlayerObject(serverMessagingHub.ReceivedClientId, networkObjectPrefab.gameObject);
                             break;
                         }
                         case MessageName.HELLO_WORLD_TO_SERVER:
                         {
-                            _ = serverMessagingHub.SendHelloWorldToAllClients();
+                            serverMessagingHub.SendHelloWorldToAllClients();
                             break;
                         }
                     }
