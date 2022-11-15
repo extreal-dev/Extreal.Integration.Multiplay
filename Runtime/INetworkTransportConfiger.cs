@@ -1,3 +1,4 @@
+using System;
 using Unity.Netcode;
 
 namespace Extreal.Integration.Multiplay.NGO
@@ -7,6 +8,11 @@ namespace Extreal.Integration.Multiplay.NGO
     /// </summary>
     public interface INetworkTransportConfiger
     {
+        /// <summary>
+        /// Gets the target type of this configer.
+        /// </summary>
+        Type GetTargetType { get; }
+
         /// <summary>
         /// Set the config of networkTransport.
         /// </summary>

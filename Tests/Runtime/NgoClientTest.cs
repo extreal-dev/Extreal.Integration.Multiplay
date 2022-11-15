@@ -326,6 +326,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             await ngoClient.ConnectAsync(connectionConfig);
             Assert.IsTrue(ngoClient.IsConnected);
 
+            clientMassagingHub.SendRestartServer();
+
             await UniTask.WaitUntil(() => onUnexpectedDisconnected);
         });
 

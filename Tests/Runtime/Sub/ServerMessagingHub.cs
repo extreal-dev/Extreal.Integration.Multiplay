@@ -30,7 +30,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             _ = ngoServer.OnServerStarted
                 .Subscribe(_ =>
                 {
-                    ngoServer.RegisterMessageHandler(MessageName.SPAWN_PLAYER_TO_SERVER.ToString(), ReceivedSpawnPlayer);
+                    ngoServer.RegisterMessageHandler(MessageName.RESTART_TO_SERVER.ToString(), ReceivedRestartServer);
                     ngoServer.RegisterMessageHandler(MessageName.HELLO_WORLD_TO_SERVER.ToString(), ReceivedHelloWorld);
                 })
                 .AddTo(disposables);
@@ -38,7 +38,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             _ = ngoServer.OnServerStopping
                 .Subscribe(_ =>
                 {
-                    ngoServer.UnregisterMessageHandler(MessageName.SPAWN_PLAYER_TO_SERVER.ToString());
+                    ngoServer.UnregisterMessageHandler(MessageName.RESTART_TO_SERVER.ToString());
                     ngoServer.UnregisterMessageHandler(MessageName.HELLO_WORLD_TO_SERVER.ToString());
                 })
                 .AddTo(disposables);
@@ -51,20 +51,10 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             GC.SuppressFinalize(this);
         }
 
-        public void Clear()
-        {
-            SendClientIds.Clear();
-            ReceivedClientId = 0;
-            ReceivedMessageName = MessageName.NONE;
-            ReceivedMessageText = string.Empty;
-            SendMessageName = MessageName.NONE;
-            SendMessageText = string.Empty;
-        }
-
-        public void ReceivedSpawnPlayer(ulong clientId, FastBufferReader reader)
+        public void ReceivedRestartServer(ulong clientId, FastBufferReader reader)
         {
             ReceivedClientId = clientId;
-            ReceivedMessageName = MessageName.SPAWN_PLAYER_TO_SERVER;
+            ReceivedMessageName = MessageName.RESTART_TO_SERVER;
             ReceivedInternal(reader);
         }
 

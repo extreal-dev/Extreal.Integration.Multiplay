@@ -98,7 +98,7 @@ namespace Extreal.Integration.Multiplay.NGO
                 throw new ArgumentNullException(nameof(networkTransportConfiger));
             }
 
-            networkTransportConfigers[networkTransportConfiger.GetType()] = networkTransportConfiger;
+            networkTransportConfigers[networkTransportConfiger.GetTargetType] = networkTransportConfiger;
         }
 
         /// <inheritdoc/>

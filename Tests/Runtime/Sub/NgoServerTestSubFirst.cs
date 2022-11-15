@@ -11,7 +11,7 @@ using UnityEngine.TestTools;
 
 namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 {
-    public class NgoServerTestSub
+    public class NgoServerTestSubFirst
     {
         private INgoClient ngoClient;
         private NetworkManager networkManager;
@@ -34,12 +34,14 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 
             ngoClient = new NgoClient(networkManager);
             onUnexpectedDisconnected = false;
+
             _ = ngoClient.OnUnexpectedDisconnected
                 .Subscribe(_ => onUnexpectedDisconnected = true)
                 .AddTo(disposables);
 
             clientMassagingHub = new ClientMessagingHub(ngoClient);
             onMessageReceived = false;
+
             _ = clientMassagingHub.OnMessageReceived
                 .Subscribe(_ => onMessageReceived = true)
                 .AddTo(disposables);
@@ -51,7 +53,6 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             clientMassagingHub.Dispose();
             ngoClient.Dispose();
             disposables.Clear();
-
             await UniTask.Yield();
         });
 
@@ -129,21 +130,6 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         });
 
         [UnityTest]
-        public IEnumerator SendMessageToAllClientsSubSecond() => UniTask.ToCoroutine(async () =>
-        {
-            var connectionConfig = ConnectionConfig.Default;
-            await ngoClient.ConnectAsync(connectionConfig);
-            Assert.IsTrue(ngoClient.IsConnected);
-
-            await UniTask.WaitUntil(() => onMessageReceived);
-            Assert.AreEqual(MessageName.HELLO_WORLD_TO_ALL_CLIENTS, clientMassagingHub.ReceivedMessageName);
-            Assert.AreEqual("Hello World", clientMassagingHub.ReceivedMessageText);
-
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
-            clientMassagingHub.SendHelloWorldToServer();
-        });
-
-        [UnityTest]
         public IEnumerator SpawnWithServerOwnershipSub() => UniTask.ToCoroutine(async () =>
         {
             var connectionConfig = ConnectionConfig.Default;
@@ -189,33 +175,6 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         });
 
         [UnityTest]
-        public IEnumerator SpawnWithClientOwnershipSubSecond() => UniTask.ToCoroutine(async () =>
-        {
-            var connectionConfig = ConnectionConfig.Default;
-            await ngoClient.ConnectAsync(connectionConfig);
-
-            await UniTask.WaitUntil(() => onMessageReceived);
-            onMessageReceived = false;
-
-            var foundNetworkObject = GameObject.Find("NetworkPlayer(Clone)");
-            Assert.IsTrue(foundNetworkObject != null);
-            var networkObject = foundNetworkObject.GetComponent<NetworkObject>();
-            Assert.IsTrue(networkObject != null);
-            Assert.IsFalse(networkObject.IsOwner);
-
-            await ngoClient.DisconnectAsync();
-
-            await ngoClient.ConnectAsync(connectionConfig);
-            foundNetworkObject = GameObject.Find("NetworkPlayer(Clone)");
-            Assert.IsTrue(foundNetworkObject != null);
-
-            await UniTask.WaitUntil(() => onMessageReceived);
-
-            foundNetworkObject = GameObject.Find("NetworkPlayer(Clone)");
-            Assert.IsTrue(foundNetworkObject == null);
-        });
-
-        [UnityTest]
         public IEnumerator VisibilitySub() => UniTask.ToCoroutine(async () =>
         {
             var connectionConfig = ConnectionConfig.Default;
@@ -243,9 +202,5 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTest]
         public IEnumerator SpawnAsPlayerObjectSubFirst()
             => SpawnWithClientOwnershipSubFirst();
-
-        [UnityTest]
-        public IEnumerator SpawnAsPlayerObjectSubSecond()
-            => SpawnWithClientOwnershipSubSecond();
     }
 }

@@ -50,18 +50,10 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             GC.SuppressFinalize(this);
         }
 
-        public void Clear()
+        public void SendRestartServer()
         {
-            ReceivedMessageName = MessageName.NONE;
-            ReceivedMessageText = string.Empty;
-            SendMessageName = MessageName.NONE;
-            SendMessageText = string.Empty;
-        }
-
-        public void SendSpawnPlayer()
-        {
-            SendMessageName = MessageName.SPAWN_PLAYER_TO_SERVER;
-            SendMessageText = "Spawn Player";
+            SendMessageName = MessageName.RESTART_TO_SERVER;
+            SendMessageText = "Restart Server";
             SendInternal();
         }
 

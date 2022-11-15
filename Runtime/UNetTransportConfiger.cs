@@ -1,3 +1,4 @@
+using System;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UNET;
 
@@ -8,6 +9,12 @@ namespace Extreal.Integration.Multiplay.NGO
     /// </summary>
     public class UNetTransportConfiger : INetworkTransportConfiger
     {
+        /// <summary>
+        /// Gets the target type of this configer.
+        /// </summary>
+        /// <returns>Unity.Netcode.Transports.UNET.UNetTransport</returns>
+        public Type GetTargetType => typeof(UNetTransport);
+
         /// <summary>
         /// Set the config of UNetTransport.
         /// </summary>

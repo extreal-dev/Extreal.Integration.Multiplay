@@ -376,28 +376,18 @@ namespace Extreal.Integration.Multiplay.NGO
         {
             networkObject.CheckObjectVisibility = checkObjectVisibility ?? (_ => true);
 
-#pragma warning disable CC0120
-#pragma warning disable IDE0010
-            switch (spawnType)
+            if (spawnType == SpawnType.ServerOwnership)
             {
-                case SpawnType.ServerOwnership:
-                {
-                    networkObject.Spawn();
-                    break;
-                }
-                case SpawnType.ClientOwnership:
-                {
-                    networkObject.SpawnWithOwnership(ownerClientId);
-                    break;
-                }
-                case SpawnType.PlayerObject:
-                {
-                    networkObject.SpawnAsPlayerObject(ownerClientId);
-                    break;
-                }
+                networkObject.Spawn();
             }
-#pragma warning restore IDE0010
-#pragma warning restore CC0120
+            if (spawnType == SpawnType.ClientOwnership)
+            {
+                networkObject.SpawnWithOwnership(ownerClientId);
+            }
+            if (spawnType == SpawnType.PlayerObject)
+            {
+                networkObject.SpawnAsPlayerObject(ownerClientId);
+            }
 
             return networkObject.gameObject;
         }

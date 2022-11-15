@@ -47,9 +47,9 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 #pragma warning disable IDE0010
                     switch (serverMessagingHub.ReceivedMessageName)
                     {
-                        case MessageName.SPAWN_PLAYER_TO_SERVER:
+                        case MessageName.RESTART_TO_SERVER:
                         {
-                            _ = ngoServer.SpawnAsPlayerObject(serverMessagingHub.ReceivedClientId, networkObjectPrefab.gameObject);
+                            RestartAsync().Forget();
                             break;
                         }
                         case MessageName.HELLO_WORLD_TO_SERVER:
@@ -69,5 +69,13 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         private void Start()
             => ngoServer.StartServerAsync().Forget();
 #pragma warning restore CC0068
+
+        private async UniTaskVoid RestartAsync()
+        {
+            await UniTask.DelayFrame(10);
+            await ngoServer.StopServerAsync();
+            await UniTask.DelayFrame(10);
+            await ngoServer.StartServerAsync();
+        }
     }
 }
