@@ -36,7 +36,7 @@ namespace Extreal.Integration.Multiplay.NGO
         /// Uses when connection is not successful.
         /// </summary>
         /// <value>Number of seconds to wait when connection is not successful.</value>
-        public int TimeoutSeconds { get; internal set; }
+        public byte TimeoutSeconds { get; internal set; }
 
         /// <summary>
         /// <para>Uses during development.</para>
@@ -60,7 +60,7 @@ namespace Extreal.Integration.Multiplay.NGO
             ushort port = 7777,
             string key = "DefaultKey",
             byte[] connectionData = null,
-            int timeoutSeconds = 10
+            byte timeoutSeconds = 10
         )
         {
             if (!IPAddress.TryParse(address, out var _))
@@ -91,7 +91,7 @@ namespace Extreal.Integration.Multiplay.NGO
             ushort port = default,
             string key = default,
             byte[] connectionData = default,
-            int timeoutSeconds = default
+            byte timeoutSeconds = default
         )
         {
             if (ReferenceEquals(this, Default))
