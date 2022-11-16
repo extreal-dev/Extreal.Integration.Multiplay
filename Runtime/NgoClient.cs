@@ -14,29 +14,31 @@ namespace Extreal.Integration.Multiplay.NGO
     /// <summary>
     /// Class that handles NetworkManager as a client.
     /// </summary>
-    public class NgoClient : INgoClient
+    public class NgoClient : IDisposable
     {
-        /// <inheritdoc/>
+        /// <summary>
+        /// Invokes immediately after connecting to the server.
+        /// </summary>
         public IObservable<Unit> OnConnected => onConnected;
         private readonly Subject<Unit> onConnected = new Subject<Unit>();
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Invokes just before disconnection from the server.
+        /// </summary>
         public IObservable<Unit> OnDisconnecting => onDisconnecting;
         private readonly Subject<Unit> onDisconnecting = new Subject<Unit>();
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Invokes immediately after an unexpected disconnection from the server.
+        /// </summary>
         public IObservable<Unit> OnUnexpectedDisconnected => onUnexpectedDisconnected;
         private readonly Subject<Unit> onUnexpectedDisconnected = new Subject<Unit>();
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Invokes immediately after the connection approval is rejected from the server.
+        /// </summary>
         public IObservable<Unit> OnApprovalRejected => onApprovalRejected;
         private readonly Subject<Unit> onApprovalRejected = new Subject<Unit>();
-
-        /// <inheritdoc/>
-        public bool IsRunning => networkManager != null && networkManager.IsClient;
-
-        /// <inheritdoc/>
-        public bool IsConnected => networkManager != null && networkManager.IsConnectedClient;
 
         private readonly NetworkManager networkManager;
         private readonly Dictionary<Type, INetworkTransportConfiger> networkTransportConfigers
@@ -76,46 +78,60 @@ namespace Extreal.Integration.Multiplay.NGO
                 Logger.LogDebug($"Dispose {nameof(NgoClient)}");
             }
 
-            if (IsRunning)
+            networkManager.OnClientConnectedCallback -= OnClientConnectedEventHandler;
+            networkManager.OnClientDisconnectCallback -= OnClientDisconnectedEventHandler;
+
+            if (networkManager.IsClient)
             {
                 DisconnectAsync().Forget();
             }
-            networkManager.OnClientConnectedCallback -= OnClientConnectedEventHandler;
-            networkManager.OnClientDisconnectCallback -= OnClientDisconnectedEventHandler;
 
             onConnected.Dispose();
             onDisconnecting.Dispose();
             onUnexpectedDisconnected.Dispose();
             onApprovalRejected.Dispose();
+            GC.SuppressFinalize(this);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Sets NetworkTransportConfiger.
+        /// </summary>
+        /// <param name="networkTransportConfiger">Configer of NetworkTransport to be set to.</param>
         /// <exception cref="ArgumentNullException">If 'networkTransportConfiger' is null.</exception>
-        public void SetNetworkTransportConfiger(INetworkTransportConfiger networkTransportConfiger)
+        public void AddNetworkTransportConfiger(INetworkTransportConfiger networkTransportConfiger)
         {
             if (networkTransportConfiger == null)
             {
                 throw new ArgumentNullException(nameof(networkTransportConfiger));
             }
 
-            networkTransportConfigers[networkTransportConfiger.GetTargetType] = networkTransportConfiger;
+            networkTransportConfigers[networkTransportConfiger.TargetType] = networkTransportConfiger;
         }
 
-        /// <inheritdoc/>
-        /// <exception cref="InvalidOperationException">If this client is already running/connected, NetworkTransport in NetworkManager is null or The configer of the real type of 'networkTransport' is not set.</exception>
+        /// <summary>
+        /// Asynchronously connects to the server.
+        /// </summary>
+        /// <param name="connectionConfig">Connection config to be used in connection.</param>
+        /// <param name="token">Token used to cancel this operation.</param>
         /// <exception cref="ArgumentNullException">If 'connectionConfig' is null.</exception>
+        /// <exception cref="InvalidOperationException">NetworkTransport in NetworkManager is null or The configer of the real type of 'networkTransport' is not set.</exception>
         /// <exception cref="TimeoutException">If 'connectionConfig.TimeoutSeconds' seconds passes without connection.</exception>
         /// <exception cref="OperationCanceledException">If 'token' is canceled.</exception>
-        public async UniTask ConnectAsync(ConnectionConfig connectionConfig, CancellationToken token = default)
+        /// <returns>
+        /// <para>UniTask of this method.</para>
+        /// True if the connection operation is successful, false otherwise.
+        /// </returns>
+        public async UniTask<bool> ConnectAsync(NgoConfig connectionConfig, CancellationToken token = default)
         {
-            if (networkManager.IsHost)
+            if (networkManager.IsClient || networkManager.IsServer || networkManager.IsHost)
             {
-                throw new InvalidOperationException("This client is already running as a host");
+                if (Logger.IsWarn())
+                {
+                    Logger.LogWarn("Cannot start Client while an instance is already running");
+                }
+                return false;
             }
-            if (IsConnected)
-            {
-                throw new InvalidOperationException("This client is already connected to the server");
-            }
+
             if (connectionConfig == null)
             {
                 throw new ArgumentNullException(nameof(connectionConfig));
@@ -144,7 +160,7 @@ namespace Extreal.Integration.Multiplay.NGO
             try
             {
                 await UniTask
-                    .WaitUntil(() => IsConnected, cancellationToken: token)
+                    .WaitUntil(() => networkManager.IsConnectedClient, cancellationToken: token)
                     .Timeout(TimeSpan.FromSeconds(connectionConfig.TimeoutSeconds));
             }
             catch (TimeoutException)
@@ -157,17 +173,16 @@ namespace Extreal.Integration.Multiplay.NGO
                 networkManager.Shutdown();
                 throw new OperationCanceledException("The connection operation was canceled");
             }
+
+            return true;
         }
 
-        /// <inheritdoc/>
-        /// <exception cref="InvalidOperationException">If this client is not yet running.</exception>
+        /// <summary>
+        /// Asynchronously disconnects from the server.
+        /// </summary>
+        /// <returns>UniTask of this method.</returns>
         public async UniTask DisconnectAsync()
         {
-            if (!IsRunning)
-            {
-                throw new InvalidOperationException("Unable to disconnect because this client is not running");
-            }
-
             if (Logger.IsDebug())
             {
                 Logger.LogDebug("This client will disconnect from the server");
@@ -179,10 +194,15 @@ namespace Extreal.Integration.Multiplay.NGO
             await UniTask.WaitWhile(() => networkManager.ShutdownInProgress);
         }
 
-        /// <inheritdoc/>
-        /// <exception cref="InvalidOperationException">If this client is not yet connected to the server.</exception>
+        /// <summary>
+        /// Sends a message to the server.
+        /// </summary>
+        /// <param name="messageName">Identifier of the message.</param>
+        /// <param name="messageStream">Message contents.</param>
+        /// <param name="networkDelivery">Specification of the method to transmission.</param>
         /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
         /// <exception cref="ArgumentException">If 'messageStream' is not initialized.</exception>
+        /// <returns>True if the message is successfully sent, false otherwise.</returns>
         public void SendMessage
         (
             string messageName,
@@ -190,11 +210,7 @@ namespace Extreal.Integration.Multiplay.NGO
             NetworkDelivery networkDelivery = NetworkDelivery.Reliable
         )
         {
-            if (!IsConnected)
-            {
-                throw new InvalidOperationException("Unable to send message to server because this client is not running");
-            }
-            if (messageName is null)
+            if (messageName == null)
             {
                 throw new ArgumentNullException(nameof(messageName));
             }
@@ -206,16 +222,15 @@ namespace Extreal.Integration.Multiplay.NGO
             networkManager.CustomMessagingManager.SendNamedMessage(messageName, NetworkManager.ServerClientId, messageStream, networkDelivery);
         }
 
-        /// <inheritdoc/>
-        /// <exception cref="InvalidOperationException">If this client is not yet connected to the server.</exception>
+        /// <summary>
+        /// Registers a message handler.
+        /// </summary>
+        /// <param name="messageName">Identifier of the message.</param>
+        /// <param name="messageHandler">Message handler to be registered.</param>
         /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
         public void RegisterMessageHandler(string messageName, HandleNamedMessageDelegate messageHandler)
         {
-            if (!IsConnected)
-            {
-                throw new InvalidOperationException("Unable to register named message handler because this client is not running");
-            }
-            if (messageName is null)
+            if (messageName == null)
             {
                 throw new ArgumentNullException(nameof(messageName));
             }
@@ -223,16 +238,14 @@ namespace Extreal.Integration.Multiplay.NGO
             networkManager.CustomMessagingManager.RegisterNamedMessageHandler(messageName, messageHandler);
         }
 
-        /// <inheritdoc/>
-        /// <exception cref="InvalidOperationException">If this client is not yet connected to the server.</exception>
+        /// <summary>
+        /// Unregisters a message handler.
+        /// </summary>
+        /// <param name="messageName">Identifier of the message.</param>
         /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
         public void UnregisterMessageHandler(string messageName)
         {
-            if (!IsConnected)
-            {
-                throw new InvalidOperationException("Unable to unregister named message handler because this client is not running");
-            }
-            if (messageName is null)
+            if (messageName == null)
             {
                 throw new ArgumentNullException(nameof(messageName));
             }
@@ -240,14 +253,8 @@ namespace Extreal.Integration.Multiplay.NGO
             networkManager.CustomMessagingManager.UnregisterNamedMessageHandler(messageName);
         }
 
-        #region Callbacks
         private void OnClientConnectedEventHandler(ulong serverId)
         {
-            if (!IsConnected)
-            {
-                return;
-            }
-
             if (Logger.IsDebug())
             {
                 Logger.LogDebug($"The client has connected to the server");
@@ -258,20 +265,24 @@ namespace Extreal.Integration.Multiplay.NGO
 
         private void OnClientDisconnectedEventHandler(ulong serverId)
         {
-            if (Logger.IsDebug())
+            if (networkManager.IsConnectedClient)
             {
-                Logger.LogDebug($"The client unexpectedly has disconnected from the server");
-            }
+                if (Logger.IsDebug())
+                {
+                    Logger.LogDebug($"The client unexpectedly disconnected from the server");
+                }
 
-            if (IsConnected)
-            {
                 onUnexpectedDisconnected.OnNext(Unit.Default);
             }
             else
             {
+                if (Logger.IsDebug())
+                {
+                    Logger.LogDebug($"The connection was rejected by the server");
+                }
+
                 onApprovalRejected.OnNext(Unit.Default);
             }
         }
-        #endregion
     }
 }

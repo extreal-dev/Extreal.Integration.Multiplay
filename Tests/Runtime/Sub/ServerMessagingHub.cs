@@ -20,10 +20,10 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         public MessageName SendMessageName { get; private set; }
         public string SendMessageText { get; private set; }
 
-        private readonly INgoServer ngoServer;
+        private readonly NgoServer ngoServer;
         private readonly CompositeDisposable disposables = new CompositeDisposable();
 
-        public ServerMessagingHub(INgoServer ngoServer)
+        public ServerMessagingHub(NgoServer ngoServer)
         {
             this.ngoServer = ngoServer;
 

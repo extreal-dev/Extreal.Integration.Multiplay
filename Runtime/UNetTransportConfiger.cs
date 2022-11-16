@@ -13,14 +13,14 @@ namespace Extreal.Integration.Multiplay.NGO
         /// Gets the target type of this configer.
         /// </summary>
         /// <returns>Unity.Netcode.Transports.UNET.UNetTransport</returns>
-        public Type GetTargetType => typeof(UNetTransport);
+        public Type TargetType => typeof(UNetTransport);
 
         /// <summary>
         /// Set the config of UNetTransport.
         /// </summary>
         /// <param name="networkTransport">UNetTransport to be set to.</param>
         /// <param name="connectionConfig">ConnectionConfig to be used.</param>
-        public void SetConfig(NetworkTransport networkTransport, ConnectionConfig connectionConfig)
+        public void SetConfig(NetworkTransport networkTransport, NgoConfig connectionConfig)
         {
             var uNetTransport = networkTransport as UNetTransport;
             uNetTransport.ConnectAddress = connectionConfig.Address.Trim();

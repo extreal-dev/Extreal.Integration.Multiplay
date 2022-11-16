@@ -16,35 +16,51 @@ namespace Extreal.Integration.Multiplay.NGO
     /// <summary>
     /// Class that handles NetworkManager as a server.
     /// </summary>
-    public class NgoServer : INgoServer
+    public class NgoServer : IDisposable
     {
-        /// <inheritdoc/>
+        /// <summary>
+        /// Invokes immediately after this server starts.
+        /// </summary>
         public IObservable<Unit> OnServerStarted => onServerStarted;
         private readonly Subject<Unit> onServerStarted = new Subject<Unit>();
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Invokes just before this server stops.
+        /// </summary>
         public IObservable<Unit> OnServerStopping => onServerStopping;
         private readonly Subject<Unit> onServerStopping = new Subject<Unit>();
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// <para>Invokes immediately after the client connects to this server.</para>
+        /// Arg: ID of the connected client
+        /// </summary>
         public IObservable<ulong> OnClientConnected => onClientConnected;
         private readonly Subject<ulong> onClientConnected = new Subject<ulong>();
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// <para>Invokes just before the client disconnects from this server.</para>
+        /// Arg: ID of the disconnecting client
+        /// </summary>
         public IObservable<ulong> OnClientDisconnecting => onClientDisconnecting;
         private readonly Subject<ulong> onClientDisconnecting = new Subject<ulong>();
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// <para>Invokes just before removing the client.</para>
+        /// Arg: ID of the removing client
+        /// </summary>
         public IObservable<ulong> OnClientRemoving => onClientRemoving;
         private readonly Subject<ulong> onClientRemoving
             = new Subject<ulong>();
 
-        /// <inheritdoc/>
-        public bool IsRunning => networkManager != null && networkManager.IsServer;
-
-        /// <inheritdoc/>
+        /// <summary>
+        /// Gets information on connected clients.
+        /// </summary>
+        /// <value>
+        /// <para>Dictionary of the connected clients.</para>
+        /// Key: Client id, Value: Client information
+        /// </value>
         public IReadOnlyDictionary<ulong, NetworkClient> ConnectedClients
-            => IsRunning ? networkManager.ConnectedClients : null;
+            => networkManager.IsServer ? networkManager.ConnectedClients : null;
 
         private readonly NetworkManager networkManager;
 
@@ -85,7 +101,7 @@ namespace Extreal.Integration.Multiplay.NGO
                 Logger.LogDebug($"Dispose {nameof(NgoServer)}");
             }
 
-            if (IsRunning)
+            if (networkManager.IsServer)
             {
                 StopServerAsync().Forget();
             }
@@ -99,14 +115,19 @@ namespace Extreal.Integration.Multiplay.NGO
             onClientConnected.Dispose();
             onClientDisconnecting.Dispose();
             onClientRemoving.Dispose();
+            GC.SuppressFinalize(this);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Asynchronously starts this server.
+        /// </summary>
+        /// <param name="token">Token used to cancel this operation.</param>
         /// <exception cref="InvalidOperationException">If this server is already running.</exception>
         /// <exception cref="OperationCanceledException">If 'token' is canceled.</exception>
+        /// <returns>UniTask of this method.</returns>
         public async UniTask StartServerAsync(CancellationToken token = default)
         {
-            if (IsRunning)
+            if (networkManager.IsServer)
             {
                 throw new InvalidOperationException("This server is already running");
             }
@@ -124,11 +145,14 @@ namespace Extreal.Integration.Multiplay.NGO
             }
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Asynchronously Stops this server.
+        /// </summary>
         /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
+        /// <returns>UniTask of this method.</returns>
         public async UniTask StopServerAsync()
         {
-            if (!IsRunning)
+            if (!networkManager.IsServer)
             {
                 throw new InvalidOperationException("Unable to stop server because it is not running");
             }
@@ -144,7 +168,11 @@ namespace Extreal.Integration.Multiplay.NGO
             await UniTask.WaitWhile(() => networkManager.ShutdownInProgress);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Sets ConnectionApprovalCallback of NetworkManager.
+        /// The callback is called when the client attempts to connect to this server.
+        /// </summary>
+        /// <param name="connectionApprovalCallback">Callback to be set to ConnectionApprovalCallback.</param>
         public void SetConnectionApprovalCallback(Action<ConnectionApprovalRequest, ConnectionApprovalResponse> connectionApprovalCallback)
         {
             if (networkManager.NetworkConfig.ConnectionApproval)
@@ -153,11 +181,15 @@ namespace Extreal.Integration.Multiplay.NGO
             }
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Remove the client.
+        /// </summary>
+        /// <param name="clientId">Id of the client to be removed.</param>
         /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
+        /// <returns>True if the client is successfully removed, false otherwise.</returns>
         public bool RemoveClient(ulong clientId)
         {
-            if (!IsRunning)
+            if (!networkManager.IsServer)
             {
                 throw new InvalidOperationException("Unable to remove client because the server is not running");
             }
@@ -177,10 +209,17 @@ namespace Extreal.Integration.Multiplay.NGO
             return true;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Sends a message to the clients.
+        /// </summary>
+        /// <param name="clientIds">IDs of the clients to whom the message is sent.</param>
+        /// <param name="messageName">Identifier of the message.</param>
+        /// <param name="messageStream">Message contents.</param>
+        /// <param name="networkDelivery">Specification of the method to transmission.</param>
         /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
         /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
         /// <exception cref="ArgumentException">If 'messageStream' is not initialized.</exception>
+        /// <returns>True if the message is successfully sent, false otherwise.</returns>
         public void SendMessageToClients
         (
             List<ulong> clientIds,
@@ -189,7 +228,7 @@ namespace Extreal.Integration.Multiplay.NGO
             NetworkDelivery networkDelivery = NetworkDelivery.Reliable
         )
         {
-            if (!IsRunning)
+            if (!networkManager.IsServer)
             {
                 throw new InvalidOperationException("Unable to send message because the server is not running");
             }
@@ -224,7 +263,12 @@ namespace Extreal.Integration.Multiplay.NGO
             networkManager.CustomMessagingManager.SendNamedMessage(messageName, existedClientIds, messageStream, networkDelivery);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Sends a message to the all clients.
+        /// </summary>
+        /// <param name="messageName">Identifier of the message.</param>
+        /// <param name="messageStream">Message contents.</param>
+        /// <param name="networkDelivery">Specification of the method to transmission.</param>
         /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
         /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
         /// <exception cref="ArgumentException">If 'messageStream' is not initialized.</exception>
@@ -235,7 +279,7 @@ namespace Extreal.Integration.Multiplay.NGO
             NetworkDelivery networkDelivery = NetworkDelivery.Reliable
         )
         {
-            if (!IsRunning)
+            if (!networkManager.IsServer)
             {
                 throw new InvalidOperationException("Unable to send message because the server is not running");
             }
@@ -251,12 +295,16 @@ namespace Extreal.Integration.Multiplay.NGO
             networkManager.CustomMessagingManager.SendNamedMessageToAll(messageName, messageStream, networkDelivery);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Registers a message handler.
+        /// </summary>
+        /// <param name="messageName">Identifier of the message.</param>
+        /// <param name="messageHandler">Message handler to be registered.</param>
         /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
         /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
         public void RegisterMessageHandler(string messageName, HandleNamedMessageDelegate messageHandler)
         {
-            if (!IsRunning)
+            if (!networkManager.IsServer)
             {
                 throw new InvalidOperationException("Unable to register named message handler because server is not running");
             }
@@ -268,12 +316,15 @@ namespace Extreal.Integration.Multiplay.NGO
             networkManager.CustomMessagingManager.RegisterNamedMessageHandler(messageName, messageHandler);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Unregisters a message handler.
+        /// </summary>
+        /// <param name="messageName">Identifier of the message.</param>
         /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
         /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
         public void UnregisterMessageHandler(string messageName)
         {
-            if (!IsRunning)
+            if (!networkManager.IsServer)
             {
                 throw new InvalidOperationException("Unable to unregister named message handler because server is not running");
             }
@@ -285,13 +336,24 @@ namespace Extreal.Integration.Multiplay.NGO
             networkManager.CustomMessagingManager.UnregisterNamedMessageHandler(messageName);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Sets VisibilityDelegate.
+        /// </summary>
+        /// <param name="visibilityDelegate">Used as CheckObjectVisibility for the spawned NetworkObject.</param>
         public void SetVisibilityDelegate(VisibilityDelegate visibilityDelegate)
             => checkObjectVisibility = visibilityDelegate;
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Spawns NetworkObject owned by the server.
+        /// </summary>
+        /// <param name="prefab">GameObject to be spawned.</param>
+        /// <param name="position">Initial position of the GameObject when it is spawned.</param>
+        /// <param name="rotation">Initial rotation of the GameObject when it is spawned.</param>
+        /// <param name="parent">Parent to be set to the GameObject.</param>
+        /// <param name="worldPositionStays">If true, the world position, scale and rotation retain the same values as before. Otherwise, the local ones retain.</param>
         /// <exception cref="ArgumentNullException">If 'prefab' is null.</exception>
         /// <exception cref="ArgumentException">If 'prefab' does not be attached NetworkObject component to .</exception>
+        /// <returns>Instantiated GameObject.</returns>
         public GameObject SpawnWithServerOwnership
         (
             GameObject prefab,
@@ -302,9 +364,18 @@ namespace Extreal.Integration.Multiplay.NGO
         )
             => SpawnInternal(prefab, position, rotation, parent, worldPositionStays, SpawnType.ServerOwnership);
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Spawns NetworkObject owned by the client.
+        /// </summary>
+        /// <param name="ownerClientId">ID of client that owns the spawned NetworkObject.</param>
+        /// <param name="prefab">GameObject to be spawned.</param>
+        /// <param name="position">Initial position of the GameObject when it is spawned.</param>
+        /// <param name="rotation">Initial rotation of the GameObject when it is spawned.</param>
+        /// <param name="parent">Parent to be set to the GameObject.</param>
+        /// <param name="worldPositionStays">If true, the world position, scale and rotation retain the same values as before. Otherwise, the local ones retain.</param>
         /// <exception cref="ArgumentNullException">If 'prefab' is null.</exception>
         /// <exception cref="ArgumentException">If 'prefab' does not be attached NetworkObject component to .</exception>
+        /// <returns>Instantiated GameObject.</returns>
         public GameObject SpawnWithClientOwnership
         (
             ulong ownerClientId,
@@ -316,9 +387,18 @@ namespace Extreal.Integration.Multiplay.NGO
         )
             => SpawnInternal(prefab, position, rotation, parent, worldPositionStays, SpawnType.ClientOwnership, ownerClientId);
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Spawns NetworkObject as a player object.
+        /// </summary>
+        /// <param name="ownerClientId">ID of client that owns the spawned NetworkObject.</param>
+        /// <param name="prefab">GameObject to be spawned.</param>
+        /// <param name="position">Initial position of the GameObject when it is spawned.</param>
+        /// <param name="rotation">Initial rotation of the GameObject when it is spawned.</param>
+        /// <param name="parent">Parent to be set to the GameObject.</param>
+        /// <param name="worldPositionStays">If true, the world position, scale and rotation retain the same values as before. Otherwise, the local ones retain.</param>
         /// <exception cref="ArgumentNullException">If 'prefab' is null.</exception>
         /// <exception cref="ArgumentException">If 'prefab' does not be attached NetworkObject component to .</exception>
+        /// <returns>Instantiated GameObject.</returns>
         public GameObject SpawnAsPlayerObject
         (
             ulong ownerClientId,

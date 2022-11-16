@@ -9,7 +9,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
     {
         [SerializeField] private NetworkManager networkManager;
 
-        private INgoServer ngoServer;
+        private NgoServer ngoServer;
 
 #pragma warning disable CC0068
         private void Awake()

@@ -18,7 +18,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 {
     public class NgoServerTest
     {
-        private INgoServer ngoServer;
+        private NgoServer ngoServer;
         private NetworkManager networkManager;
         private NetworkObject networkObjectPrefab;
         private ServerMessagingHub serverMessagingHub;
@@ -141,7 +141,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             Assert.IsFalse(onServerStarted);
             await ngoServer.StartServerAsync();
             Assert.IsTrue(onServerStarted);
-            Assert.IsTrue(ngoServer.IsRunning);
+            Assert.IsTrue(networkManager.IsServer);
         });
 
         [UnityTest]
@@ -155,7 +155,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             });
 
             await ngoServer.StartServerAsync();
-            Assert.IsTrue(ngoServer.IsRunning);
+            Assert.IsTrue(networkManager.IsServer);
 
             await UniTask.WaitUntil(() => connectionApproved);
 
@@ -169,7 +169,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public IEnumerator StartServerTwice() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
-            Assert.IsTrue(ngoServer.IsRunning);
+            Assert.IsTrue(networkManager.IsServer);
 
             Exception exception = null;
             try
@@ -222,12 +222,12 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public IEnumerator StopServerSuccess() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
-            Assert.IsTrue(ngoServer.IsRunning);
+            Assert.IsTrue(networkManager.IsServer);
 
             Assert.IsFalse(onServerStopping);
             await ngoServer.StopServerAsync();
             Assert.IsTrue(onServerStopping);
-            Assert.IsFalse(ngoServer.IsRunning);
+            Assert.IsFalse(networkManager.IsServer);
         });
 
         [UnityTest]
@@ -251,7 +251,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public IEnumerator RemoveClient() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
-            Assert.IsTrue(ngoServer.IsRunning);
+            Assert.IsTrue(networkManager.IsServer);
 
             await UniTask.WaitUntil(() => onClientConnected);
             await UniTask.Delay(TimeSpan.FromSeconds(1));
@@ -273,7 +273,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public IEnumerator RemoveNotExistedClient() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
-            Assert.IsTrue(ngoServer.IsRunning);
+            Assert.IsTrue(networkManager.IsServer);
 
             const ulong notExistedClientId = 10;
             var result = ngoServer.RemoveClient(notExistedClientId);
@@ -285,7 +285,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public IEnumerator SendMessageToClients() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
-            Assert.IsTrue(ngoServer.IsRunning);
+            Assert.IsTrue(networkManager.IsServer);
 
             await UniTask.WaitUntil(() => onClientConnected);
 
@@ -311,7 +311,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public IEnumerator SendMessageToClientsWithMessageNameNull() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
-            Assert.IsTrue(ngoServer.IsRunning);
+            Assert.IsTrue(networkManager.IsServer);
 
             const string nullMessageName = null;
             var clientIds = new List<ulong> { 0 };
@@ -325,7 +325,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public IEnumerator SendMessageToClientsWithMessageStreamNotInitialized() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
-            Assert.IsTrue(ngoServer.IsRunning);
+            Assert.IsTrue(networkManager.IsServer);
 
             const string messageName = "TestMessage";
             var clientIds = new List<ulong>();
@@ -339,7 +339,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public IEnumerator SendMessageToClientsWithNotExistedClientId() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
-            Assert.IsTrue(ngoServer.IsRunning);
+            Assert.IsTrue(networkManager.IsServer);
 
             const string messageName = "TestMessage";
             var notExistedClientIds = new List<ulong> { 10 };
@@ -352,28 +352,16 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public IEnumerator SendMessageToAllClients() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
-            Assert.IsTrue(ngoServer.IsRunning);
+            Assert.IsTrue(networkManager.IsServer);
 
-            await UniTask.WaitUntil(() => onClientConnected);
-            onClientConnected = false;
-            var firstConnectedClientId = connectedClientId;
             await UniTask.WaitUntil(() => onClientConnected);
 
             Assert.IsFalse(onMessageReceived);
             serverMessagingHub.SendHelloWorldToAllClients();
 
             await UniTask.WaitUntil(() => onMessageReceived);
-            onMessageReceived = false;
-            Assert.AreEqual(firstConnectedClientId, serverMessagingHub.ReceivedClientId);
-            Assert.AreEqual(MessageName.HELLO_WORLD_TO_SERVER, serverMessagingHub.ReceivedMessageName);
-            Assert.AreEqual("Hello World", serverMessagingHub.ReceivedMessageText);
 
-            await UniTask.WaitUntil(() => onMessageReceived);
-            Assert.AreEqual(connectedClientId, serverMessagingHub.ReceivedClientId);
-            Assert.AreEqual(MessageName.HELLO_WORLD_TO_SERVER, serverMessagingHub.ReceivedMessageName);
-            Assert.AreEqual("Hello World", serverMessagingHub.ReceivedMessageText);
-
-            await UniTask.WaitUntil(() => ngoServer.ConnectedClients.Count == 0);
+            await UniTask.WaitUntil(() => onClientDisconnecting);
         });
 
         [Test]
@@ -386,7 +374,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public IEnumerator SendMessageToAllClientsWithMessageNameNull() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
-            Assert.IsTrue(ngoServer.IsRunning);
+            Assert.IsTrue(networkManager.IsServer);
 
             const string nullMessageName = null;
             var messageStream = new FastBufferWriter(FixedString64Bytes.UTF8MaxLengthInBytes, Allocator.Temp);
@@ -399,7 +387,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public IEnumerator SendMessageToAllClientsWithMessageStreamNotInitialized() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
-            Assert.IsTrue(ngoServer.IsRunning);
+            Assert.IsTrue(networkManager.IsServer);
 
             const string messageName = "TestMessage";
             var notInitializedMessageStream = new FastBufferWriter();
@@ -418,7 +406,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public IEnumerator RegisterNamedMessageWithMessageNameNull() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
-            Assert.IsTrue(ngoServer.IsRunning);
+            Assert.IsTrue(networkManager.IsServer);
 
             const string nullMessageName = null;
             Assert.That(() => ngoServer.RegisterMessageHandler(nullMessageName, (_, _) => { return; }),
@@ -436,7 +424,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public IEnumerator UnregisterNamedMessageWithMessageNameNull() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
-            Assert.IsTrue(ngoServer.IsRunning);
+            Assert.IsTrue(networkManager.IsServer);
 
             const string nullMessageName = null;
             Assert.That(() => ngoServer.UnregisterMessageHandler(nullMessageName),
@@ -448,7 +436,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public IEnumerator UnregisterNamedMassageWithoutRegister() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
-            Assert.IsTrue(ngoServer.IsRunning);
+            Assert.IsTrue(networkManager.IsServer);
 
             ngoServer.UnregisterMessageHandler("TestMessage");
         });
@@ -489,13 +477,9 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             await ngoServer.StartServerAsync();
 
             await UniTask.WaitUntil(() => onClientConnected);
-            onClientConnected = false;
-            var firstConnectedClientId = connectedClientId;
-            await UniTask.WaitUntil(() => onClientConnected);
-            onClientConnected = false;
 
-            var instance = ngoServer.SpawnWithClientOwnership(firstConnectedClientId, networkObjectPrefab.gameObject);
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
+            var instance = ngoServer.SpawnWithClientOwnership(connectedClientId, networkObjectPrefab.gameObject);
+            await UniTask.DelayFrame(10);
             serverMessagingHub.SendHelloWorldToAllClients();
 
             var foundNetworkObject = GameObject.Find("NetworkPlayer(Clone)");
@@ -503,19 +487,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             Assert.AreSame(instance, foundNetworkObject);
             var networkObject = foundNetworkObject.GetComponent<NetworkObject>();
             Assert.IsTrue(networkObject != null);
-            Assert.AreEqual(firstConnectedClientId, networkObject.OwnerClientId);
-
-            await UniTask.WaitUntil(() => onClientConnected);
-            onClientDisconnecting = false;
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
-
-            serverMessagingHub.SendHelloWorldToClients(new List<ulong> { firstConnectedClientId });
-
-            await UniTask.WaitUntil(() => onClientDisconnecting);
-            onClientDisconnecting = false;
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
-
-            serverMessagingHub.SendHelloWorldToAllClients();
+            Assert.AreEqual(connectedClientId, networkObject.OwnerClientId);
 
             await UniTask.WaitUntil(() => onClientDisconnecting);
         });
@@ -526,13 +498,9 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             await ngoServer.StartServerAsync();
 
             await UniTask.WaitUntil(() => onClientConnected);
-            onClientConnected = false;
-            var firstConnectedClientId = connectedClientId;
-            await UniTask.WaitUntil(() => onClientConnected);
-            onClientConnected = false;
 
-            var instance = ngoServer.SpawnAsPlayerObject(firstConnectedClientId, networkObjectPrefab.gameObject);
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
+            var instance = ngoServer.SpawnAsPlayerObject(connectedClientId, networkObjectPrefab.gameObject);
+            await UniTask.DelayFrame(10);
             serverMessagingHub.SendHelloWorldToAllClients();
 
             var foundNetworkObject = GameObject.Find("NetworkPlayer(Clone)");
@@ -540,19 +508,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             Assert.AreSame(instance, foundNetworkObject);
             var networkObject = foundNetworkObject.GetComponent<NetworkObject>();
             Assert.IsTrue(networkObject != null);
-            Assert.IsNotNull(ngoServer.ConnectedClients[firstConnectedClientId].PlayerObject);
-
-            await UniTask.WaitUntil(() => onClientConnected);
-            onClientDisconnecting = false;
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
-
-            serverMessagingHub.SendHelloWorldToClients(new List<ulong> { firstConnectedClientId });
-
-            await UniTask.WaitUntil(() => onClientDisconnecting);
-            onClientDisconnecting = false;
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
-
-            serverMessagingHub.SendHelloWorldToAllClients();
+            Assert.IsNotNull(ngoServer.ConnectedClients[connectedClientId].PlayerObject);
 
             await UniTask.WaitUntil(() => onClientDisconnecting);
         });

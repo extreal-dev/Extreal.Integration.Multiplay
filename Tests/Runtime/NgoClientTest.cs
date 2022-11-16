@@ -16,7 +16,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 {
     public class NgoClientTest
     {
-        private INgoClient ngoClient;
+        private NgoClient ngoClient;
         private NetworkManager networkManager;
         private ClientMessagingHub clientMassagingHub;
 
@@ -94,36 +94,36 @@ namespace Extreal.Integration.Multiplay.NGO.Test
                         .With.Message.Contains(nameof(networkManager)));
 
         [Test]
-        public void SetNetworkTransportConfiger()
-            => ngoClient.SetNetworkTransportConfiger(new UnityTransportConfiger());
+        public void AddNetworkTransportConfiger()
+            => ngoClient.AddNetworkTransportConfiger(new UnityTransportConfiger());
 
         [Test]
-        public void SetNetworkTransportConfigerNull()
-            => Assert.That(() => ngoClient.SetNetworkTransportConfiger(null),
+        public void AddNetworkTransportConfigerNull()
+            => Assert.That(() => ngoClient.AddNetworkTransportConfiger(null),
                 Throws.TypeOf<ArgumentNullException>()
                     .With.Message.Contain("networkTransportConfiger"));
 
         [UnityTest]
         public IEnumerator ConnectToServerSuccess() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = ConnectionConfig.Default;
+            var connectionConfig = new NgoConfig();
 
             Assert.IsFalse(onConnected);
-            await ngoClient.ConnectAsync(connectionConfig);
+            var result = await ngoClient.ConnectAsync(connectionConfig);
+            Assert.IsTrue(result);
             Assert.IsTrue(onConnected);
-            Assert.IsTrue(ngoClient.IsRunning);
-            Assert.IsTrue(ngoClient.IsConnected);
+            Assert.IsTrue(networkManager.IsConnectedClient);
         });
 
         [UnityTest]
         public IEnumerator ConnectToServerWithConnectionData() => UniTask.ToCoroutine(async () =>
         {
-            var failedConnectionConfig = new ConnectionConfig(connectionData: new byte[] { 1, 2, 3, 4 }, timeoutSeconds: 1);
+            var failedNgoConfig = new NgoConfig(connectionData: new byte[] { 1, 2, 3, 4 }, timeoutSeconds: 1);
 
             Exception exception = null;
             try
             {
-                await ngoClient.ConnectAsync(failedConnectionConfig);
+                _ = await ngoClient.ConnectAsync(failedNgoConfig);
             }
             catch (Exception e)
             {
@@ -133,66 +133,34 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             Assert.AreEqual(typeof(TimeoutException), exception.GetType());
             Assert.AreEqual("The connection timed-out", exception.Message);
             Assert.IsTrue(onApprovalRejected);
-            Assert.IsFalse(ngoClient.IsConnected);
-            Assert.IsFalse(ngoClient.IsRunning);
+            Assert.IsFalse(networkManager.IsConnectedClient);
 
-            var successConnectionConfig = new ConnectionConfig(connectionData: new byte[] { 3, 7, 7, 6 });
-            await ngoClient.ConnectAsync(successConnectionConfig);
-            Assert.IsTrue(ngoClient.IsConnected);
-        });
-
-        [UnityTest]
-        public IEnumerator ConnectToServerUsingHost() => UniTask.ToCoroutine(async () =>
-        {
-            var result = networkManager.StartHost();
-            Assert.IsTrue(result);
-
-            var connectionConfig = ConnectionConfig.Default;
-
-            Exception exception = null;
-            try
-            {
-                await ngoClient.ConnectAsync(connectionConfig);
-            }
-            catch (Exception e)
-            {
-                exception = e;
-            }
-            Assert.IsNotNull(exception);
-            Assert.AreEqual(typeof(InvalidOperationException), exception.GetType());
-            Assert.AreEqual("This client is already running as a host", exception.Message);
+            var successNgoConfig = new NgoConfig(connectionData: new byte[] { 3, 7, 7, 6 });
+            _ = await ngoClient.ConnectAsync(successNgoConfig);
+            Assert.IsTrue(networkManager.IsConnectedClient);
         });
 
         [UnityTest]
         public IEnumerator ConnectToServerTwice() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = ConnectionConfig.Default;
-            await ngoClient.ConnectAsync(connectionConfig);
-            Assert.IsTrue(ngoClient.IsConnected);
+            var connectionConfig = new NgoConfig();
+            _ = await ngoClient.ConnectAsync(connectionConfig);
+            Assert.IsTrue(networkManager.IsConnectedClient);
 
-            Exception exception = null;
-            try
-            {
-                await ngoClient.ConnectAsync(connectionConfig);
-            }
-            catch (Exception e)
-            {
-                exception = e;
-            }
-            Assert.IsNotNull(exception);
-            Assert.AreEqual(typeof(InvalidOperationException), exception.GetType());
-            Assert.AreEqual("This client is already connected to the server", exception.Message);
+            var result = await ngoClient.ConnectAsync(connectionConfig);
+            Assert.IsFalse(result);
+            Assert.IsTrue(networkManager.IsConnectedClient);
         });
 
         [UnityTest]
-        public IEnumerator ConnectToServerWithConnectionConfigNull() => UniTask.ToCoroutine(async () =>
+        public IEnumerator ConnectToServerWithNgoConfigNull() => UniTask.ToCoroutine(async () =>
         {
-            const ConnectionConfig nullConnectionConfig = null;
+            const NgoConfig nullNgoConfig = null;
 
             Exception exception = null;
             try
             {
-                await ngoClient.ConnectAsync(nullConnectionConfig);
+                _ = await ngoClient.ConnectAsync(nullNgoConfig);
             }
             catch (Exception e)
             {
@@ -208,12 +176,12 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         {
             networkManager.NetworkConfig.NetworkTransport = null;
 
-            var nullConnectionConfig = ConnectionConfig.Default;
+            var nullNgoConfig = new NgoConfig();
 
             Exception exception = null;
             try
             {
-                await ngoClient.ConnectAsync(nullConnectionConfig);
+                _ = await ngoClient.ConnectAsync(nullNgoConfig);
             }
             catch (Exception e)
             {
@@ -230,12 +198,12 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             var networkTransportMock = new GameObject().AddComponent<NetworkTransportMock>().GetComponent<NetworkTransport>();
             networkManager.NetworkConfig.NetworkTransport = networkTransportMock;
 
-            var connectionConfig = ConnectionConfig.Default;
+            var connectionConfig = new NgoConfig();
 
             Exception exception = null;
             try
             {
-                await ngoClient.ConnectAsync(connectionConfig);
+                _ = await ngoClient.ConnectAsync(connectionConfig);
             }
             catch (Exception e)
             {
@@ -249,12 +217,12 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator ConnectToServerWithTimeoutException() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = new ConnectionConfig(port: 7776, timeoutSeconds: 1);
+            var connectionConfig = new NgoConfig(port: 7776, timeoutSeconds: 1);
 
             Exception exception = null;
             try
             {
-                await ngoClient.ConnectAsync(connectionConfig);
+                _ = await ngoClient.ConnectAsync(connectionConfig);
             }
             catch (Exception e)
             {
@@ -270,13 +238,13 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         {
             var cancellationTokenSource = new CancellationTokenSource();
 
-            var connectionConfig = new ConnectionConfig(port: 7776);
+            var connectionConfig = new NgoConfig(port: 7776);
 
             Exception exception = null;
             try
             {
                 UniTaskCancelInOneFrameAsync(cancellationTokenSource).Forget();
-                await ngoClient.ConnectAsync(connectionConfig, cancellationTokenSource.Token);
+                _ = await ngoClient.ConnectAsync(connectionConfig, cancellationTokenSource.Token);
             }
             catch (Exception e)
             {
@@ -290,53 +258,38 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator DisconnectFromServerSuccess() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = ConnectionConfig.Default;
-            await ngoClient.ConnectAsync(connectionConfig);
-            Assert.IsTrue(ngoClient.IsConnected);
+            var connectionConfig = new NgoConfig();
+            _ = await ngoClient.ConnectAsync(connectionConfig);
+            Assert.IsTrue(networkManager.IsConnectedClient);
 
             Assert.IsFalse(onDisconnectingEventHandler);
             await ngoClient.DisconnectAsync();
             Assert.IsTrue(onDisconnectingEventHandler);
             Assert.IsFalse(onUnexpectedDisconnected);
-            Assert.IsFalse(ngoClient.IsRunning);
-            Assert.IsFalse(ngoClient.IsConnected);
-        });
-
-        [UnityTest]
-        public IEnumerator DisconnectFromServerWithoutConnect() => UniTask.ToCoroutine(async () =>
-        {
-            Exception exception = null;
-            try
-            {
-                await ngoClient.DisconnectAsync();
-            }
-            catch (Exception e)
-            {
-                exception = e;
-            }
-            Assert.IsNotNull(exception);
-            Assert.AreEqual(typeof(InvalidOperationException), exception.GetType());
-            Assert.AreEqual("Unable to disconnect because this client is not running", exception.Message);
+            Assert.IsFalse(networkManager.IsClient);
+            Assert.IsFalse(networkManager.IsConnectedClient);
         });
 
         [UnityTest]
         public IEnumerator StopServerBeforeDisconnect() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = ConnectionConfig.Default;
-            await ngoClient.ConnectAsync(connectionConfig);
-            Assert.IsTrue(ngoClient.IsConnected);
+            var connectionConfig = new NgoConfig();
+            _ = await ngoClient.ConnectAsync(connectionConfig);
+            Assert.IsTrue(networkManager.IsConnectedClient);
 
             clientMassagingHub.SendRestartServer();
 
             await UniTask.WaitUntil(() => onUnexpectedDisconnected);
+            Assert.IsFalse(networkManager.IsClient);
+            Assert.IsFalse(networkManager.IsConnectedClient);
         });
 
         [UnityTest]
         public IEnumerator SendToServerSuccess() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = ConnectionConfig.Default;
-            await ngoClient.ConnectAsync(connectionConfig);
-            Assert.IsTrue(ngoClient.IsConnected);
+            var connectionConfig = new NgoConfig();
+            _ = await ngoClient.ConnectAsync(connectionConfig);
+            Assert.IsTrue(networkManager.IsConnectedClient);
 
             clientMassagingHub.SendHelloWorldToServer();
 
@@ -349,9 +302,9 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator SendToServerWithMessageNameNull() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = ConnectionConfig.Default;
-            await ngoClient.ConnectAsync(connectionConfig);
-            Assert.IsTrue(ngoClient.IsConnected);
+            var connectionConfig = new NgoConfig();
+            _ = await ngoClient.ConnectAsync(connectionConfig);
+            Assert.IsTrue(networkManager.IsConnectedClient);
 
             const string nullMessageName = null;
             var messageStream = new FastBufferWriter(FixedString64Bytes.UTF8MaxLengthInBytes, Allocator.Temp);
@@ -363,9 +316,9 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator SendToServerWithMessageStreamNotInitialized() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = ConnectionConfig.Default;
-            await ngoClient.ConnectAsync(connectionConfig);
-            Assert.IsTrue(ngoClient.IsConnected);
+            var connectionConfig = new NgoConfig();
+            _ = await ngoClient.ConnectAsync(connectionConfig);
+            Assert.IsTrue(networkManager.IsConnectedClient);
 
             const string messageName = "TestMessage";
             var notInitializedMessageStream = new FastBufferWriter();
@@ -374,18 +327,12 @@ namespace Extreal.Integration.Multiplay.NGO.Test
                     .With.Message.EqualTo("messageStream is not initialized"));
         });
 
-        [Test]
-        public void SendToServerWithoutConnect()
-            => Assert.That(() => clientMassagingHub.SendHelloWorldToServer(),
-                Throws.TypeOf<InvalidOperationException>()
-                    .With.Message.EqualTo("Unable to send message to server because this client is not running"));
-
         [UnityTest]
         public IEnumerator RegisterNamedMessageWithMessageNameNull() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = ConnectionConfig.Default;
-            await ngoClient.ConnectAsync(connectionConfig);
-            Assert.IsTrue(ngoClient.IsConnected);
+            var connectionConfig = new NgoConfig();
+            _ = await ngoClient.ConnectAsync(connectionConfig);
+            Assert.IsTrue(networkManager.IsConnectedClient);
 
             const string nullMessageName = null;
             Assert.That(() => ngoClient.RegisterMessageHandler(nullMessageName, (_, _) => { return; }),
@@ -393,18 +340,12 @@ namespace Extreal.Integration.Multiplay.NGO.Test
                     .With.Message.Contains("messageName"));
         });
 
-        [Test]
-        public void RegisterNamedMessageWithoutConnect()
-            => Assert.That(() => ngoClient.RegisterMessageHandler("TestMessage", (_, _) => { return; }),
-                Throws.TypeOf<InvalidOperationException>()
-                    .With.Message.EqualTo("Unable to register named message handler because this client is not running"));
-
         [UnityTest]
         public IEnumerator UnregisterNamedMessageWithMessageNameNull() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = ConnectionConfig.Default;
-            await ngoClient.ConnectAsync(connectionConfig);
-            Assert.IsTrue(ngoClient.IsConnected);
+            var connectionConfig = new NgoConfig();
+            _ = await ngoClient.ConnectAsync(connectionConfig);
+            Assert.IsTrue(networkManager.IsConnectedClient);
 
             const string nullMessageName = null;
             Assert.That(() => ngoClient.UnregisterMessageHandler(nullMessageName),
@@ -412,18 +353,12 @@ namespace Extreal.Integration.Multiplay.NGO.Test
                     .With.Message.Contains("messageName"));
         });
 
-        [Test]
-        public void UnregisterNamedMessageWithoutConnect()
-            => Assert.That(() => ngoClient.UnregisterMessageHandler("TestMessage"),
-                Throws.TypeOf<InvalidOperationException>()
-                    .With.Message.EqualTo("Unable to unregister named message handler because this client is not running"));
-
         [UnityTest]
         public IEnumerator UnregisterNamedMassageWithoutRegister() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = ConnectionConfig.Default;
-            await ngoClient.ConnectAsync(connectionConfig);
-            Assert.IsTrue(ngoClient.IsConnected);
+            var connectionConfig = new NgoConfig();
+            _ = await ngoClient.ConnectAsync(connectionConfig);
+            Assert.IsTrue(networkManager.IsConnectedClient);
 
             ngoClient.UnregisterMessageHandler("TestMessage");
         });

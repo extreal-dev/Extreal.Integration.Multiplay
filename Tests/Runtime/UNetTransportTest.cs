@@ -11,7 +11,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 {
     public class UNetTransportTest
     {
-        private INgoClient ngoClient;
+        private NgoClient ngoClient;
         private NetworkManager networkManager;
 
         private bool onConnected;
@@ -55,13 +55,17 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator ConnectToServerSuccess() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = ConnectionConfig.Default;
+            var connectionConfig = new NgoConfig(timeoutSeconds: 60);
 
             Assert.IsFalse(onConnected);
-            await ngoClient.ConnectAsync(connectionConfig);
+            var result = await ngoClient.ConnectAsync(connectionConfig);
+            Assert.IsTrue(result);
             Assert.IsTrue(onConnected);
-            Assert.IsTrue(ngoClient.IsRunning);
-            Assert.IsTrue(ngoClient.IsConnected);
+            Assert.IsTrue(networkManager.IsConnectedClient);
         });
+
+        [Test]
+        public void TargetType()
+            => ngoClient.AddNetworkTransportConfiger(new UNetTransportConfiger());
     }
 }

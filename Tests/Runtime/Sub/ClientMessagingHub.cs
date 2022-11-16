@@ -16,11 +16,11 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         public MessageName SendMessageName { get; private set; }
         public string SendMessageText { get; private set; }
 
-        private readonly INgoClient ngoClient;
+        private readonly NgoClient ngoClient;
 
         private readonly CompositeDisposable disposables = new CompositeDisposable();
 
-        public ClientMessagingHub(INgoClient ngoClient)
+        public ClientMessagingHub(NgoClient ngoClient)
         {
             this.ngoClient = ngoClient;
 

@@ -13,7 +13,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [SerializeField] private NetworkManager networkManager;
         [SerializeField] private NetworkObject networkObjectPrefab;
 
-        private INgoServer ngoServer;
+        private NgoServer ngoServer;
         private ServerMessagingHub serverMessagingHub;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeCracker", "CC0033")]
