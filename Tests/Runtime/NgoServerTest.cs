@@ -248,13 +248,14 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         });
 
         [UnityTest]
-        public IEnumerator RemoveClient() => UniTask.ToCoroutine(async () =>
+        public IEnumerator RemoveClientSuccess() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
             Assert.IsTrue(networkManager.IsServer);
 
             await UniTask.WaitUntil(() => onClientConnected);
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
+            await UniTask.DelayFrame(10);
+
 
             var result = ngoServer.RemoveClient(connectedClientId);
             Assert.IsTrue(result);
@@ -397,13 +398,13 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         });
 
         [Test]
-        public void RegisterNamedMessageWithoutConnect()
+        public void RegisterMessageHandlerWithoutConnect()
             => Assert.That(() => ngoServer.RegisterMessageHandler("TestMessage", (_, _) => { return; }),
                 Throws.TypeOf<InvalidOperationException>()
                     .With.Message.EqualTo("Unable to register named message handler because server is not running"));
 
         [UnityTest]
-        public IEnumerator RegisterNamedMessageWithMessageNameNull() => UniTask.ToCoroutine(async () =>
+        public IEnumerator RegisterMessageHandlerWithMessageNameNull() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
             Assert.IsTrue(networkManager.IsServer);
@@ -415,13 +416,13 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         });
 
         [Test]
-        public void UnregisterNamedMessageWithoutConnect()
+        public void UnregisterMessageHandlerWithoutConnect()
             => Assert.That(() => ngoServer.UnregisterMessageHandler("TestMessage"),
                 Throws.TypeOf<InvalidOperationException>()
                     .With.Message.EqualTo("Unable to unregister named message handler because server is not running"));
 
         [UnityTest]
-        public IEnumerator UnregisterNamedMessageWithMessageNameNull() => UniTask.ToCoroutine(async () =>
+        public IEnumerator UnregisterMessageHandlerWithMessageNameNull() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
             Assert.IsTrue(networkManager.IsServer);
@@ -433,7 +434,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         });
 
         [UnityTest]
-        public IEnumerator UnregisterNamedMassageWithoutRegister() => UniTask.ToCoroutine(async () =>
+        public IEnumerator UnregisterMessageHandlerWithoutRegister() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
             Assert.IsTrue(networkManager.IsServer);
@@ -450,7 +451,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             onClientConnected = false;
 
             var instance = ngoServer.SpawnWithServerOwnership(networkObjectPrefab.gameObject);
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
+            await UniTask.DelayFrame(10);
             serverMessagingHub.SendHelloWorldToAllClients();
 
             var foundNetworkObject = GameObject.Find("NetworkPlayer(Clone)");
@@ -459,14 +460,6 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             var networkObject = foundNetworkObject.GetComponent<NetworkObject>();
             Assert.IsTrue(networkObject != null);
             Assert.IsTrue(networkObject.IsOwner);
-
-            await UniTask.WaitUntil(() => onClientConnected);
-            onClientDisconnecting = false;
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
-
-            networkObject.Despawn();
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
-            serverMessagingHub.SendHelloWorldToAllClients();
 
             await UniTask.WaitUntil(() => onClientDisconnecting);
         });
@@ -531,23 +524,20 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             onClientConnected = false;
 
             var instanceA = ngoServer.SpawnWithServerOwnership(networkObjectPrefab.gameObject);
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
+            await UniTask.DelayFrame(10);
             serverMessagingHub.SendHelloWorldToAllClients();
 
             var foundNetworkObjectA = GameObject.Find("NetworkPlayer(Clone)");
             Assert.IsTrue(foundNetworkObjectA != null);
 
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
+            await UniTask.DelayFrame(10);
 
             var instanceB = ngoServer.SpawnWithServerOwnership(networkObjectPrefab.gameObject);
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
+            await UniTask.DelayFrame(10);
             serverMessagingHub.SendHelloWorldToAllClients();
 
             var foundNetworkObjects = UnityEngine.Object.FindObjectsOfType<NetworkObject>();
             Assert.IsTrue(foundNetworkObjects.Length == 2);
-
-            await UniTask.WaitUntil(() => onClientConnected);
-            onClientDisconnecting = false;
 
             await UniTask.WaitUntil(() => onClientDisconnecting);
         });

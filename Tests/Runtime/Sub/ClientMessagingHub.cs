@@ -57,7 +57,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             SendInternal();
         }
 
-        public void SendHelloWorldToServer()
+        public void SendHelloWorld()
         {
             SendMessageName = MessageName.HELLO_WORLD_TO_SERVER;
             SendMessageText = "Hello World";

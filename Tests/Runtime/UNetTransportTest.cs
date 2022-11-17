@@ -66,6 +66,6 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
         [Test]
         public void TargetType()
-            => ngoClient.AddNetworkTransportConfiger(new UNetTransportConfiger());
+            => ngoClient.AddConnectionSetter(new UNetTransportConnectionSetter());
     }
 }

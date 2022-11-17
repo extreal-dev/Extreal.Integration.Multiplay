@@ -41,11 +41,11 @@ namespace Extreal.Integration.Multiplay.NGO
         private readonly Subject<Unit> onApprovalRejected = new Subject<Unit>();
 
         private readonly NetworkManager networkManager;
-        private readonly Dictionary<Type, INetworkTransportConfiger> networkTransportConfigers
-            = new Dictionary<Type, INetworkTransportConfiger>
+        private readonly Dictionary<Type, IConnectionSetter> connectionSetters
+            = new Dictionary<Type, IConnectionSetter>
                 {
-                    {typeof(UnityTransport), new UnityTransportConfiger()},
-                    {typeof(UNetTransport), new UNetTransportConfiger()}
+                    {typeof(UnityTransport), new UnityTransportConnectionSetter()},
+                    {typeof(UNetTransport), new UNetTransportConnectionSetter()}
                 };
 
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(NgoClient));
@@ -96,16 +96,16 @@ namespace Extreal.Integration.Multiplay.NGO
         /// <summary>
         /// Sets NetworkTransportConfiger.
         /// </summary>
-        /// <param name="networkTransportConfiger">Configer of NetworkTransport to be set to.</param>
-        /// <exception cref="ArgumentNullException">If 'networkTransportConfiger' is null.</exception>
-        public void AddNetworkTransportConfiger(INetworkTransportConfiger networkTransportConfiger)
+        /// <param name="connectionSetter">Connection setter of NetworkTransport to be set to.</param>
+        /// <exception cref="ArgumentNullException">If 'connectionSetter' is null.</exception>
+        public void AddConnectionSetter(IConnectionSetter connectionSetter)
         {
-            if (networkTransportConfiger == null)
+            if (connectionSetter == null)
             {
-                throw new ArgumentNullException(nameof(networkTransportConfiger));
+                throw new ArgumentNullException(nameof(connectionSetter));
             }
 
-            networkTransportConfigers[networkTransportConfiger.TargetType] = networkTransportConfiger;
+            connectionSetters[connectionSetter.TargetType] = connectionSetter;
         }
 
         /// <summary>
@@ -143,12 +143,12 @@ namespace Extreal.Integration.Multiplay.NGO
                 throw new InvalidOperationException($"{nameof(NetworkTransport)} in {nameof(NetworkManager)} must not be null");
             }
 
-            if (!networkTransportConfigers.ContainsKey(networkTransport.GetType()))
+            if (!connectionSetters.ContainsKey(networkTransport.GetType()))
             {
                 throw new InvalidOperationException($"The configer of {networkTransport.GetType().Name} is not set");
             }
 
-            networkTransportConfigers[networkTransport.GetType()].SetConfig(networkTransport, connectionConfig);
+            connectionSetters[networkTransport.GetType()].Set(networkTransport, connectionConfig);
 
             if (connectionConfig.ConnectionData != null)
             {
