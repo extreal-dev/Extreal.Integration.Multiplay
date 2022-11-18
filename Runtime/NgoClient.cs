@@ -94,7 +94,7 @@ namespace Extreal.Integration.Multiplay.NGO
         }
 
         /// <summary>
-        /// Sets NetworkTransportConfiger.
+        /// Sets ConnectionSetter.
         /// </summary>
         /// <param name="connectionSetter">Connection setter of NetworkTransport to be set to.</param>
         /// <exception cref="ArgumentNullException">If 'connectionSetter' is null.</exception>
@@ -111,30 +111,30 @@ namespace Extreal.Integration.Multiplay.NGO
         /// <summary>
         /// Asynchronously connects to the server.
         /// </summary>
-        /// <param name="connectionConfig">Connection config to be used in connection.</param>
+        /// <param name="ngoConfig">Connection config to be used in connection.</param>
         /// <param name="token">Token used to cancel this operation.</param>
-        /// <exception cref="ArgumentNullException">If 'connectionConfig' is null.</exception>
-        /// <exception cref="InvalidOperationException">NetworkTransport in NetworkManager is null or The configer of the real type of 'networkTransport' is not set.</exception>
-        /// <exception cref="TimeoutException">If 'connectionConfig.TimeoutSeconds' seconds passes without connection.</exception>
+        /// <exception cref="ArgumentNullException">If 'ngoConfig' is null.</exception>
+        /// <exception cref="InvalidOperationException">NetworkTransport in NetworkManager is null or ConnectionSetter for the real type of 'networkTransport' is not set.</exception>
+        /// <exception cref="TimeoutException">If 'ngoConfig.TimeoutSeconds' seconds passes without connection.</exception>
         /// <exception cref="OperationCanceledException">If 'token' is canceled.</exception>
         /// <returns>
         /// <para>UniTask of this method.</para>
         /// True if the connection operation is successful, false otherwise.
         /// </returns>
-        public async UniTask<bool> ConnectAsync(NgoConfig connectionConfig, CancellationToken token = default)
+        public async UniTask<bool> ConnectAsync(NgoConfig ngoConfig, CancellationToken token = default)
         {
-            if (networkManager.IsClient || networkManager.IsServer || networkManager.IsHost)
+            if (networkManager.IsClient)
             {
-                if (Logger.IsWarn())
+                if (Logger.IsDebug())
                 {
-                    Logger.LogWarn("Cannot start Client while an instance is already running");
+                    Logger.LogDebug("Unable to connect to the server again while this client is already running");
                 }
                 return false;
             }
 
-            if (connectionConfig == null)
+            if (ngoConfig == null)
             {
-                throw new ArgumentNullException(nameof(connectionConfig));
+                throw new ArgumentNullException(nameof(ngoConfig));
             }
 
             var networkTransport = networkManager.NetworkConfig.NetworkTransport;
@@ -145,14 +145,14 @@ namespace Extreal.Integration.Multiplay.NGO
 
             if (!connectionSetters.ContainsKey(networkTransport.GetType()))
             {
-                throw new InvalidOperationException($"The configer of {networkTransport.GetType().Name} is not set");
+                throw new InvalidOperationException($"ConnectionSetter of {networkTransport.GetType().Name} is not added");
             }
 
-            connectionSetters[networkTransport.GetType()].Set(networkTransport, connectionConfig);
+            connectionSetters[networkTransport.GetType()].Set(networkTransport, ngoConfig);
 
-            if (connectionConfig.ConnectionData != null)
+            if (ngoConfig.ConnectionData != null)
             {
-                networkManager.NetworkConfig.ConnectionData = connectionConfig.ConnectionData;
+                networkManager.NetworkConfig.ConnectionData = ngoConfig.ConnectionData;
             }
 
             _ = networkManager.StartClient();
@@ -161,7 +161,7 @@ namespace Extreal.Integration.Multiplay.NGO
             {
                 await UniTask
                     .WaitUntil(() => networkManager.IsConnectedClient, cancellationToken: token)
-                    .Timeout(TimeSpan.FromSeconds(connectionConfig.TimeoutSeconds));
+                    .Timeout(TimeSpan.FromSeconds(ngoConfig.TimeoutSeconds));
             }
             catch (TimeoutException)
             {
@@ -200,6 +200,7 @@ namespace Extreal.Integration.Multiplay.NGO
         /// <param name="messageName">Identifier of the message.</param>
         /// <param name="messageStream">Message contents.</param>
         /// <param name="networkDelivery">Specification of the method to transmission.</param>
+        /// <exception cref="InvalidOperationException">If this client is not running.</exception>
         /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
         /// <exception cref="ArgumentException">If 'messageStream' is not initialized.</exception>
         /// <returns>True if the message is successfully sent, false otherwise.</returns>
@@ -210,6 +211,8 @@ namespace Extreal.Integration.Multiplay.NGO
             NetworkDelivery networkDelivery = NetworkDelivery.Reliable
         )
         {
+            IfClientIsNotRunningThenThrowException();
+
             if (messageName == null)
             {
                 throw new ArgumentNullException(nameof(messageName));
@@ -227,9 +230,12 @@ namespace Extreal.Integration.Multiplay.NGO
         /// </summary>
         /// <param name="messageName">Identifier of the message.</param>
         /// <param name="messageHandler">Message handler to be registered.</param>
+        /// <exception cref="InvalidOperationException">If this client is not running.</exception>
         /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
         public void RegisterMessageHandler(string messageName, HandleNamedMessageDelegate messageHandler)
         {
+            IfClientIsNotRunningThenThrowException();
+
             if (messageName == null)
             {
                 throw new ArgumentNullException(nameof(messageName));
@@ -242,15 +248,26 @@ namespace Extreal.Integration.Multiplay.NGO
         /// Unregisters a message handler.
         /// </summary>
         /// <param name="messageName">Identifier of the message.</param>
+        /// <exception cref="InvalidOperationException">If this client is not running.</exception>
         /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
         public void UnregisterMessageHandler(string messageName)
         {
+            IfClientIsNotRunningThenThrowException();
+
             if (messageName == null)
             {
                 throw new ArgumentNullException(nameof(messageName));
             }
 
             networkManager.CustomMessagingManager.UnregisterNamedMessageHandler(messageName);
+        }
+
+        private void IfClientIsNotRunningThenThrowException()
+        {
+            if (!networkManager.IsClient)
+            {
+                throw new InvalidOperationException("This client is not running");
+            }
         }
 
         private void OnClientConnectedEventHandler(ulong serverId)

@@ -14,7 +14,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [SerializeField] private NetworkObject networkObjectPrefab;
 
         private NgoServer ngoServer;
-        private ServerMessagingHub serverMessagingHub;
+        private ServerMessagingManager serverMessagingManager;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeCracker", "CC0033")]
         private readonly CompositeDisposable disposables = new CompositeDisposable();
@@ -25,7 +25,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             LoggingManager.Initialize(Core.Logging.LogLevel.Debug);
 
             ngoServer = new NgoServer(networkManager);
-            serverMessagingHub = new ServerMessagingHub(ngoServer);
+            serverMessagingManager = new ServerMessagingManager(ngoServer);
 
             ngoServer.SetConnectionApprovalCallback((request, response)
                 => response.Approved = request.Payload.SequenceEqual(Array.Empty<byte>())
@@ -34,18 +34,18 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 
         private void OnDestroy()
         {
-            serverMessagingHub.Dispose();
+            serverMessagingManager.Dispose();
             ngoServer.Dispose();
             disposables.Dispose();
         }
 
         private void OnEnable()
-            => serverMessagingHub.OnMessageReceived
+            => serverMessagingManager.OnMessageReceived
                 .Subscribe(arg =>
                 {
 #pragma warning disable CC0120
 #pragma warning disable IDE0010
-                    switch (serverMessagingHub.ReceivedMessageName)
+                    switch (serverMessagingManager.ReceivedMessageName)
                     {
                         case MessageName.RESTART_TO_SERVER:
                         {
@@ -54,7 +54,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
                         }
                         case MessageName.HELLO_WORLD_TO_SERVER:
                         {
-                            serverMessagingHub.SendHelloWorldToAllClients();
+                            serverMessagingManager.SendHelloWorldToAllClients();
                             break;
                         }
                     }

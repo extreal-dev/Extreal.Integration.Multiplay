@@ -55,10 +55,10 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator ConnectToServerSuccess() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = new NgoConfig(timeoutSeconds: 60);
+            var ngoConfig = new NgoConfig(timeoutSeconds: 180);
 
             Assert.IsFalse(onConnected);
-            var result = await ngoClient.ConnectAsync(connectionConfig);
+            var result = await ngoClient.ConnectAsync(ngoConfig);
             Assert.IsTrue(result);
             Assert.IsTrue(onConnected);
             Assert.IsTrue(networkManager.IsConnectedClient);

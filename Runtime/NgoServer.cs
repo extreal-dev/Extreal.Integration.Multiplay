@@ -60,7 +60,8 @@ namespace Extreal.Integration.Multiplay.NGO
         /// Key: Client id, Value: Client information
         /// </value>
         public IReadOnlyDictionary<ulong, NetworkClient> ConnectedClients
-            => networkManager.IsServer ? networkManager.ConnectedClients : null;
+            => networkManager.IsServer ? networkManager.ConnectedClients : emptyConnectedClients;
+        private readonly Dictionary<ulong, NetworkClient> emptyConnectedClients = new Dictionary<ulong, NetworkClient>();
 
         private readonly NetworkManager networkManager;
 
@@ -72,7 +73,7 @@ namespace Extreal.Integration.Multiplay.NGO
         /// Creates a new NgoServer with given networkManager.
         /// </summary>
         /// <param name="networkManager">NetworkManager to be used as a server.</param>
-        /// <exception cref="ArgumentNullException">If networkManager is null.</exception>
+        /// <exception cref="ArgumentNullException">If 'networkManager' is null.</exception>
         public NgoServer(NetworkManager networkManager)
         {
             if (networkManager == null)
@@ -148,15 +149,9 @@ namespace Extreal.Integration.Multiplay.NGO
         /// <summary>
         /// Asynchronously Stops this server.
         /// </summary>
-        /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
         /// <returns>UniTask of this method.</returns>
         public async UniTask StopServerAsync()
         {
-            if (!networkManager.IsServer)
-            {
-                throw new InvalidOperationException("Unable to stop server because it is not running");
-            }
-
             if (Logger.IsDebug())
             {
                 Logger.LogDebug("The server will stop");
@@ -174,31 +169,23 @@ namespace Extreal.Integration.Multiplay.NGO
         /// </summary>
         /// <param name="connectionApprovalCallback">Callback to be set to ConnectionApprovalCallback.</param>
         public void SetConnectionApprovalCallback(Action<ConnectionApprovalRequest, ConnectionApprovalResponse> connectionApprovalCallback)
-        {
-            if (networkManager.NetworkConfig.ConnectionApproval)
-            {
-                networkManager.ConnectionApprovalCallback = connectionApprovalCallback;
-            }
-        }
+            => networkManager.ConnectionApprovalCallback = connectionApprovalCallback;
 
         /// <summary>
         /// Remove the client.
         /// </summary>
         /// <param name="clientId">Id of the client to be removed.</param>
-        /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
+        /// <exception cref="InvalidOperationException">If this server is not running.</exception>
         /// <returns>True if the client is successfully removed, false otherwise.</returns>
         public bool RemoveClient(ulong clientId)
         {
-            if (!networkManager.IsServer)
-            {
-                throw new InvalidOperationException("Unable to remove client because the server is not running");
-            }
+            IfServerIsNotRunningThenThrowException();
 
             if (!networkManager.ConnectedClientsIds.Contains(clientId))
             {
-                if (Logger.IsWarn())
+                if (Logger.IsDebug())
                 {
-                    Logger.LogWarn($"Unable to remove client with client id {clientId} because it does not exist");
+                    Logger.LogDebug($"Unable to remove client with client id {clientId} because it does not exist");
                 }
                 return false;
             }
@@ -216,7 +203,7 @@ namespace Extreal.Integration.Multiplay.NGO
         /// <param name="messageName">Identifier of the message.</param>
         /// <param name="messageStream">Message contents.</param>
         /// <param name="networkDelivery">Specification of the method to transmission.</param>
-        /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
+        /// <exception cref="InvalidOperationException">If this server is not running.</exception>
         /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
         /// <exception cref="ArgumentException">If 'messageStream' is not initialized.</exception>
         /// <returns>True if the message is successfully sent, false otherwise.</returns>
@@ -228,10 +215,8 @@ namespace Extreal.Integration.Multiplay.NGO
             NetworkDelivery networkDelivery = NetworkDelivery.Reliable
         )
         {
-            if (!networkManager.IsServer)
-            {
-                throw new InvalidOperationException("Unable to send message because the server is not running");
-            }
+            IfServerIsNotRunningThenThrowException();
+
             if (messageName == null)
             {
                 throw new ArgumentNullException(nameof(messageName));
@@ -254,9 +239,9 @@ namespace Extreal.Integration.Multiplay.NGO
                     notExistedClientIds.Add(clientId);
                 }
             }
-            if (Logger.IsWarn() && notExistedClientIds.Count != 0)
+            if (Logger.IsDebug() && notExistedClientIds.Count != 0)
             {
-                Logger.LogWarn($"{nameof(clientIds)} contains some ids that does not exist: "
+                Logger.LogDebug($"{nameof(clientIds)} contains some ids that does not exist: "
                                 + string.Join(", ", notExistedClientIds));
             }
 
@@ -269,7 +254,7 @@ namespace Extreal.Integration.Multiplay.NGO
         /// <param name="messageName">Identifier of the message.</param>
         /// <param name="messageStream">Message contents.</param>
         /// <param name="networkDelivery">Specification of the method to transmission.</param>
-        /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
+        /// <exception cref="InvalidOperationException">If this server is not running.</exception>
         /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
         /// <exception cref="ArgumentException">If 'messageStream' is not initialized.</exception>
         public void SendMessageToAllClients
@@ -279,10 +264,8 @@ namespace Extreal.Integration.Multiplay.NGO
             NetworkDelivery networkDelivery = NetworkDelivery.Reliable
         )
         {
-            if (!networkManager.IsServer)
-            {
-                throw new InvalidOperationException("Unable to send message because the server is not running");
-            }
+            IfServerIsNotRunningThenThrowException();
+
             if (messageName == null)
             {
                 throw new ArgumentNullException(nameof(messageName));
@@ -300,14 +283,12 @@ namespace Extreal.Integration.Multiplay.NGO
         /// </summary>
         /// <param name="messageName">Identifier of the message.</param>
         /// <param name="messageHandler">Message handler to be registered.</param>
-        /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
+        /// <exception cref="InvalidOperationException">If this server is not running.</exception>
         /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
         public void RegisterMessageHandler(string messageName, HandleNamedMessageDelegate messageHandler)
         {
-            if (!networkManager.IsServer)
-            {
-                throw new InvalidOperationException("Unable to register named message handler because server is not running");
-            }
+            IfServerIsNotRunningThenThrowException();
+
             if (messageName == null)
             {
                 throw new ArgumentNullException(nameof(messageName));
@@ -320,14 +301,12 @@ namespace Extreal.Integration.Multiplay.NGO
         /// Unregisters a message handler.
         /// </summary>
         /// <param name="messageName">Identifier of the message.</param>
-        /// <exception cref="InvalidOperationException">If this server is not yet running.</exception>
+        /// <exception cref="InvalidOperationException">If this server is not running.</exception>
         /// <exception cref="ArgumentNullException">If 'messageName' is null.</exception>
         public void UnregisterMessageHandler(string messageName)
         {
-            if (!networkManager.IsServer)
-            {
-                throw new InvalidOperationException("Unable to unregister named message handler because server is not running");
-            }
+            IfServerIsNotRunningThenThrowException();
+
             if (messageName == null)
             {
                 throw new ArgumentNullException(nameof(messageName));
@@ -421,6 +400,10 @@ namespace Extreal.Integration.Multiplay.NGO
             ulong ownerClientId = default
         )
         {
+            if (!networkManager.IsListening)
+            {
+                throw new InvalidOperationException("Unable to spawn objects because this server is not listening");
+            }
             var networkObject = CreateInstanceAsNetworkObject(prefab, position, rotation, parent, worldPositionStays);
             return SpawnNetworkObject(networkObject, spawnType, ownerClientId);
         }
@@ -472,7 +455,14 @@ namespace Extreal.Integration.Multiplay.NGO
             return networkObject.gameObject;
         }
 
-        #region Callbacks
+        private void IfServerIsNotRunningThenThrowException()
+        {
+            if (!networkManager.IsServer)
+            {
+                throw new InvalidOperationException("This server is not running");
+            }
+        }
+
         private void OnServerStartedEventHandler()
         {
             if (Logger.IsDebug())
@@ -502,7 +492,6 @@ namespace Extreal.Integration.Multiplay.NGO
 
             onClientDisconnecting.OnNext(clientId);
         }
-        #endregion
 
         private enum SpawnType
         {

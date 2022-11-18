@@ -17,7 +17,7 @@ namespace Extreal.Integration.Multiplay.NGO
         /// Set the connection config of NetworkTransport.
         /// </summary>
         /// <param name="networkTransport">NetworkTransport to be set to.</param>
-        /// <param name="connectionConfig">NgoConfig to be used.</param>
-        void Set(NetworkTransport networkTransport, NgoConfig connectionConfig);
+        /// <param name="ngoConfig">NgoConfig to be used.</param>
+        void Set(NetworkTransport networkTransport, NgoConfig ngoConfig);
     }
 }

@@ -21,7 +21,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         private NgoServer ngoServer;
         private NetworkManager networkManager;
         private NetworkObject networkObjectPrefab;
-        private ServerMessagingHub serverMessagingHub;
+        private ServerMessagingManager serverMessagingManager;
 
         private bool onServerStarted;
         private bool onServerStopping;
@@ -94,10 +94,10 @@ namespace Extreal.Integration.Multiplay.NGO.Test
                 })
                 .AddTo(disposables);
 
-            serverMessagingHub = new ServerMessagingHub(ngoServer);
+            serverMessagingManager = new ServerMessagingManager(ngoServer);
             onMessageReceived = false;
 
-            _ = serverMessagingHub.OnMessageReceived
+            _ = serverMessagingManager.OnMessageReceived
                 .Subscribe(_ => onMessageReceived = true)
                 .AddTo(disposables);
         });
@@ -105,7 +105,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTearDown]
         public IEnumerator DisposeAsync() => UniTask.ToCoroutine(async () =>
         {
-            serverMessagingHub.Dispose();
+            serverMessagingManager.Dispose();
             ngoServer.Dispose();
             disposables.Clear();
 
@@ -132,7 +132,16 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             UnityEngine.Object.Destroy(networkManager.gameObject);
             await UniTask.Yield();
             var connectedClients = ngoServer.ConnectedClients;
-            Assert.IsNull(connectedClients);
+            Assert.IsEmpty(connectedClients);
+        });
+
+        [UnityTest]
+        public IEnumerator SetConnectionApprovalCallbackWithConnectionApprovalFalse() => UniTask.ToCoroutine(async () =>
+        {
+            networkManager.NetworkConfig.ConnectionApproval = false;
+            ngoServer.SetConnectionApprovalCallback((_, _) => { return; });
+            await ngoServer.StartServerAsync();
+            LogAssert.Expect(LogType.Warning, "[Netcode] A ConnectionApproval callback is defined but ConnectionApproval is disabled. In order to use ConnectionApproval it has to be explicitly enabled ");
         });
 
         [UnityTest]
@@ -231,23 +240,6 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         });
 
         [UnityTest]
-        public IEnumerator StopServerWithoutStart() => UniTask.ToCoroutine(async () =>
-        {
-            Exception exception = null;
-            try
-            {
-                await ngoServer.StopServerAsync();
-            }
-            catch (Exception e)
-            {
-                exception = e;
-            }
-            Assert.IsNotNull(exception);
-            Assert.AreEqual(typeof(InvalidOperationException), exception.GetType());
-            Assert.AreEqual("Unable to stop server because it is not running", exception.Message);
-        });
-
-        [UnityTest]
         public IEnumerator RemoveClientSuccess() => UniTask.ToCoroutine(async () =>
         {
             await ngoServer.StartServerAsync();
@@ -268,7 +260,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public void RemoveClientWithoutConnect()
             => Assert.That(() => ngoServer.RemoveClient(0),
                 Throws.TypeOf<InvalidOperationException>()
-                    .With.Message.EqualTo("Unable to remove client because the server is not running"));
+                    .With.Message.EqualTo("This server is not running"));
 
         [UnityTest]
         public IEnumerator RemoveNotExistedClient() => UniTask.ToCoroutine(async () =>
@@ -279,7 +271,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             const ulong notExistedClientId = 10;
             var result = ngoServer.RemoveClient(notExistedClientId);
             Assert.IsFalse(result);
-            LogAssert.Expect(LogType.Warning, $"[{Core.Logging.LogLevel.Warn}:{nameof(NgoServer)}] Unable to remove client with client id {notExistedClientId} because it does not exist");
+            LogAssert.Expect(LogType.Log, $"[{Core.Logging.LogLevel.Debug}:{nameof(NgoServer)}] Unable to remove client with client id {notExistedClientId} because it does not exist");
         });
 
         [UnityTest]
@@ -292,21 +284,21 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
             Assert.IsFalse(onMessageReceived);
             var clientIds = new List<ulong> { connectedClientId };
-            serverMessagingHub.SendHelloWorldToClients(clientIds);
+            serverMessagingManager.SendHelloWorldToClients(clientIds);
 
             await UniTask.WaitUntil(() => onMessageReceived);
-            Assert.AreEqual(connectedClientId, serverMessagingHub.ReceivedClientId);
-            Assert.AreEqual(MessageName.HELLO_WORLD_TO_SERVER, serverMessagingHub.ReceivedMessageName);
-            Assert.AreEqual("Hello World", serverMessagingHub.ReceivedMessageText);
+            Assert.AreEqual(connectedClientId, serverMessagingManager.ReceivedClientId);
+            Assert.AreEqual(MessageName.HELLO_WORLD_TO_SERVER, serverMessagingManager.ReceivedMessageName);
+            Assert.AreEqual("Hello World", serverMessagingManager.ReceivedMessageText);
 
             await UniTask.WaitUntil(() => onClientDisconnecting);
         });
 
         [Test]
         public void SendMessageToClientsWithoutConnect()
-            => Assert.That(() => serverMessagingHub.SendHelloWorldToClients(new List<ulong> { 10 }),
+            => Assert.That(() => serverMessagingManager.SendHelloWorldToClients(new List<ulong> { 10 }),
                 Throws.TypeOf<InvalidOperationException>()
-                    .With.Message.EqualTo("Unable to send message because the server is not running"));
+                    .With.Message.EqualTo("This server is not running"));
 
         [UnityTest]
         public IEnumerator SendMessageToClientsWithMessageNameNull() => UniTask.ToCoroutine(async () =>
@@ -346,7 +338,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             var notExistedClientIds = new List<ulong> { 10 };
             var messageStream = new FastBufferWriter(FixedString64Bytes.UTF8MaxLengthInBytes, Allocator.Temp);
             ngoServer.SendMessageToClients(notExistedClientIds, messageName, messageStream);
-            LogAssert.Expect(LogType.Warning, $"[{Core.Logging.LogLevel.Warn}:{nameof(NgoServer)}] clientIds contains some ids that does not exist: " + string.Join(", ", notExistedClientIds));
+            LogAssert.Expect(LogType.Log, $"[{Core.Logging.LogLevel.Debug}:{nameof(NgoServer)}] clientIds contains some ids that does not exist: " + string.Join(", ", notExistedClientIds));
         });
 
         [UnityTest]
@@ -358,7 +350,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             await UniTask.WaitUntil(() => onClientConnected);
 
             Assert.IsFalse(onMessageReceived);
-            serverMessagingHub.SendHelloWorldToAllClients();
+            serverMessagingManager.SendHelloWorldToAllClients();
 
             await UniTask.WaitUntil(() => onMessageReceived);
 
@@ -367,9 +359,9 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
         [Test]
         public void SendToAllClientsWithoutConnect()
-            => Assert.That(() => serverMessagingHub.SendHelloWorldToAllClients(),
+            => Assert.That(() => serverMessagingManager.SendHelloWorldToAllClients(),
                 Throws.TypeOf<InvalidOperationException>()
-                    .With.Message.EqualTo("Unable to send message because the server is not running"));
+                    .With.Message.EqualTo("This server is not running"));
 
         [UnityTest]
         public IEnumerator SendMessageToAllClientsWithMessageNameNull() => UniTask.ToCoroutine(async () =>
@@ -401,7 +393,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public void RegisterMessageHandlerWithoutConnect()
             => Assert.That(() => ngoServer.RegisterMessageHandler("TestMessage", (_, _) => { return; }),
                 Throws.TypeOf<InvalidOperationException>()
-                    .With.Message.EqualTo("Unable to register named message handler because server is not running"));
+                    .With.Message.EqualTo("This server is not running"));
 
         [UnityTest]
         public IEnumerator RegisterMessageHandlerWithMessageNameNull() => UniTask.ToCoroutine(async () =>
@@ -419,7 +411,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public void UnregisterMessageHandlerWithoutConnect()
             => Assert.That(() => ngoServer.UnregisterMessageHandler("TestMessage"),
                 Throws.TypeOf<InvalidOperationException>()
-                    .With.Message.EqualTo("Unable to unregister named message handler because server is not running"));
+                    .With.Message.EqualTo("This server is not running"));
 
         [UnityTest]
         public IEnumerator UnregisterMessageHandlerWithMessageNameNull() => UniTask.ToCoroutine(async () =>
@@ -452,7 +444,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
             var instance = ngoServer.SpawnWithServerOwnership(networkObjectPrefab.gameObject);
             await UniTask.DelayFrame(10);
-            serverMessagingHub.SendHelloWorldToAllClients();
+            serverMessagingManager.SendHelloWorldToAllClients();
 
             var foundNetworkObject = GameObject.Find("NetworkPlayer(Clone)");
             Assert.IsTrue(foundNetworkObject != null);
@@ -473,7 +465,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
             var instance = ngoServer.SpawnWithClientOwnership(connectedClientId, networkObjectPrefab.gameObject);
             await UniTask.DelayFrame(10);
-            serverMessagingHub.SendHelloWorldToAllClients();
+            serverMessagingManager.SendHelloWorldToAllClients();
 
             var foundNetworkObject = GameObject.Find("NetworkPlayer(Clone)");
             Assert.IsTrue(foundNetworkObject != null);
@@ -494,7 +486,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
             var instance = ngoServer.SpawnAsPlayerObject(connectedClientId, networkObjectPrefab.gameObject);
             await UniTask.DelayFrame(10);
-            serverMessagingHub.SendHelloWorldToAllClients();
+            serverMessagingManager.SendHelloWorldToAllClients();
 
             var foundNetworkObject = GameObject.Find("NetworkPlayer(Clone)");
             Assert.IsTrue(foundNetworkObject != null);
@@ -505,6 +497,12 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
             await UniTask.WaitUntil(() => onClientDisconnecting);
         });
+
+        [Test]
+        public void SpawnWithServerOwnershipWithoutStartServer()
+            => Assert.That(() => ngoServer.SpawnWithServerOwnership(new GameObject()),
+                Throws.TypeOf<InvalidOperationException>()
+                    .With.Message.EqualTo("Unable to spawn objects because this server is not listening"));
 
         [UnityTest]
         public IEnumerator Visibility() => UniTask.ToCoroutine(async () =>
@@ -525,7 +523,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
             var instanceA = ngoServer.SpawnWithServerOwnership(networkObjectPrefab.gameObject);
             await UniTask.DelayFrame(10);
-            serverMessagingHub.SendHelloWorldToAllClients();
+            serverMessagingManager.SendHelloWorldToAllClients();
 
             var foundNetworkObjectA = GameObject.Find("NetworkPlayer(Clone)");
             Assert.IsTrue(foundNetworkObjectA != null);
@@ -534,7 +532,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
             var instanceB = ngoServer.SpawnWithServerOwnership(networkObjectPrefab.gameObject);
             await UniTask.DelayFrame(10);
-            serverMessagingHub.SendHelloWorldToAllClients();
+            serverMessagingManager.SendHelloWorldToAllClients();
 
             var foundNetworkObjects = UnityEngine.Object.FindObjectsOfType<NetworkObject>();
             Assert.IsTrue(foundNetworkObjects.Length == 2);
@@ -542,17 +540,23 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             await UniTask.WaitUntil(() => onClientDisconnecting);
         });
 
-        [Test]
-        public void SpawnWithPrefabNull()
-            => Assert.That(() => ngoServer.SpawnWithServerOwnership(null),
-                Throws.TypeOf<ArgumentNullException>()
-                    .With.Message.Contains("prefab"));
+        [UnityTest]
+        public IEnumerator SpawnWithPrefabNull() => UniTask.ToCoroutine(async () =>
+        {
+            await ngoServer.StartServerAsync();
+            Assert.That(() => ngoServer.SpawnWithServerOwnership(null),
+               Throws.TypeOf<ArgumentNullException>()
+                   .With.Message.Contains("prefab"));
+        });
 
-        [Test]
-        public void SpawnWithoutNetworkObject()
-            => Assert.That(() => ngoServer.SpawnWithServerOwnership(new GameObject()),
+        [UnityTest]
+        public IEnumerator SpawnWithoutNetworkObject() => UniTask.ToCoroutine(async () =>
+        {
+            await ngoServer.StartServerAsync();
+            Assert.That(() => ngoServer.SpawnWithServerOwnership(new GameObject()),
                 Throws.TypeOf<ArgumentException>()
                     .With.Message.EqualTo("GameObject without NetworkObject cannot be spawned"));
+        });
 
         private static async UniTaskVoid UniTaskCancelInOneFrameAsync(CancellationTokenSource cts)
         {

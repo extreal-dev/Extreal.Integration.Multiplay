@@ -33,7 +33,7 @@ namespace Extreal.Integration.Multiplay.NGO
         public byte TimeoutSeconds { get; internal set; }
 
         /// <summary>
-        /// Creates a new ConnectionConfig with given address, port, connectionData and timeoutSeconds.
+        /// Creates a new NgoConfig with given address, port, connectionData and timeoutSeconds.
         /// </summary>
         /// <param name="address">IP Address to be used in connection.</param>
         /// <param name="port">Port to be used in connection.</param>

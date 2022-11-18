@@ -6,7 +6,7 @@ using Unity.Netcode;
 
 namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 {
-    public class ServerMessagingHub : IDisposable
+    public class ServerMessagingManager : IDisposable
     {
         public IObservable<Unit> OnMessageReceived => onMessageReceived;
         private readonly Subject<Unit> onMessageReceived = new Subject<Unit>();
@@ -23,7 +23,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         private readonly NgoServer ngoServer;
         private readonly CompositeDisposable disposables = new CompositeDisposable();
 
-        public ServerMessagingHub(NgoServer ngoServer)
+        public ServerMessagingManager(NgoServer ngoServer)
         {
             this.ngoServer = ngoServer;
 

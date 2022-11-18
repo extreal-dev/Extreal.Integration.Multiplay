@@ -15,7 +15,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
     {
         private NgoClient ngoClient;
         private NetworkManager networkManager;
-        private ClientMessagingHub clientMassagingHub;
+        private ClientMessagingManager clientMessagingManager;
 
         private bool onUnexpectedDisconnected;
         private bool onMessageReceived;
@@ -26,7 +26,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnitySetUp]
         public IEnumerator InitializeAsync() => UniTask.ToCoroutine(async () =>
         {
-            await UniTask.Delay(TimeSpan.FromSeconds(0.5));
+            await UniTask.Delay(TimeSpan.FromSeconds(1));
 
             LoggingManager.Initialize(Core.Logging.LogLevel.Debug);
 
@@ -41,10 +41,10 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
                 .Subscribe(_ => onUnexpectedDisconnected = true)
                 .AddTo(disposables);
 
-            clientMassagingHub = new ClientMessagingHub(ngoClient);
+            clientMessagingManager = new ClientMessagingManager(ngoClient);
             onMessageReceived = false;
 
-            _ = clientMassagingHub.OnMessageReceived
+            _ = clientMessagingManager.OnMessageReceived
                 .Subscribe(_ => onMessageReceived = true)
                 .AddTo(disposables);
         });
@@ -52,7 +52,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTearDown]
         public IEnumerator DisposeAsync() => UniTask.ToCoroutine(async () =>
         {
-            clientMassagingHub.Dispose();
+            clientMessagingManager.Dispose();
             ngoClient.Dispose();
             disposables.Clear();
             await UniTask.Yield();
@@ -65,12 +65,12 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTest]
         public IEnumerator StartServerWithConnectionApprovalSub() => UniTask.ToCoroutine(async () =>
         {
-            var failedConnectionConfig = new NgoConfig(connectionData: new byte[] { 1, 2, 3, 4 }, timeoutSeconds: 1);
+            var failedNgoConfig = new NgoConfig(connectionData: new byte[] { 1, 2, 3, 4 }, timeoutSeconds: 1);
 
             Exception exception = null;
             try
             {
-                _ = await ngoClient.ConnectAsync(failedConnectionConfig);
+                _ = await ngoClient.ConnectAsync(failedNgoConfig);
             }
             catch (Exception e)
             {
@@ -80,24 +80,24 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             Assert.AreEqual(typeof(TimeoutException), exception.GetType());
             Assert.AreEqual("The connection timed-out", exception.Message);
 
-            var successConnectionConfig = new NgoConfig(connectionData: new byte[] { 3, 7, 7, 6 });
-            _ = await ngoClient.ConnectAsync(successConnectionConfig);
+            var successNgoConfig = new NgoConfig(connectionData: new byte[] { 3, 7, 7, 6 });
+            _ = await ngoClient.ConnectAsync(successNgoConfig);
             Assert.IsTrue(networkManager.IsConnectedClient);
         });
 
         [UnityTest]
         public IEnumerator ConnectAndDisconnectClientsSub() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = new NgoConfig();
-            _ = await ngoClient.ConnectAsync(connectionConfig);
+            var ngoConfig = new NgoConfig();
+            _ = await ngoClient.ConnectAsync(ngoConfig);
             Assert.IsTrue(networkManager.IsConnectedClient);
         });
 
         [UnityTest]
         public IEnumerator RemoveClientSuccessSub() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = new NgoConfig();
-            _ = await ngoClient.ConnectAsync(connectionConfig);
+            var ngoConfig = new NgoConfig();
+            _ = await ngoClient.ConnectAsync(ngoConfig);
             Assert.IsTrue(networkManager.IsConnectedClient);
 
             await UniTask.WaitUntil(() => onUnexpectedDisconnected);
@@ -106,36 +106,36 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTest]
         public IEnumerator SendMessageToClientsSub() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = new NgoConfig();
-            _ = await ngoClient.ConnectAsync(connectionConfig);
+            var ngoConfig = new NgoConfig();
+            _ = await ngoClient.ConnectAsync(ngoConfig);
             Assert.IsTrue(networkManager.IsConnectedClient);
 
             await UniTask.WaitUntil(() => onMessageReceived);
-            Assert.AreEqual(MessageName.HELLO_WORLD_TO_CLIENT, clientMassagingHub.ReceivedMessageName);
-            Assert.AreEqual("Hello World", clientMassagingHub.ReceivedMessageText);
+            Assert.AreEqual(MessageName.HELLO_WORLD_TO_CLIENT, clientMessagingManager.ReceivedMessageName);
+            Assert.AreEqual("Hello World", clientMessagingManager.ReceivedMessageText);
 
-            clientMassagingHub.SendHelloWorld();
+            clientMessagingManager.SendHelloWorld();
         });
 
         [UnityTest]
         public IEnumerator SendMessageToAllClientsSub() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = new NgoConfig();
-            _ = await ngoClient.ConnectAsync(connectionConfig);
+            var ngoConfig = new NgoConfig();
+            _ = await ngoClient.ConnectAsync(ngoConfig);
             Assert.IsTrue(networkManager.IsConnectedClient);
 
             await UniTask.WaitUntil(() => onMessageReceived);
-            Assert.AreEqual(MessageName.HELLO_WORLD_TO_ALL_CLIENTS, clientMassagingHub.ReceivedMessageName);
-            Assert.AreEqual("Hello World", clientMassagingHub.ReceivedMessageText);
+            Assert.AreEqual(MessageName.HELLO_WORLD_TO_ALL_CLIENTS, clientMessagingManager.ReceivedMessageName);
+            Assert.AreEqual("Hello World", clientMessagingManager.ReceivedMessageText);
 
-            clientMassagingHub.SendHelloWorld();
+            clientMessagingManager.SendHelloWorld();
         });
 
         [UnityTest]
         public IEnumerator SpawnWithServerOwnershipSub() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = new NgoConfig();
-            _ = await ngoClient.ConnectAsync(connectionConfig);
+            var ngoConfig = new NgoConfig();
+            _ = await ngoClient.ConnectAsync(ngoConfig);
 
             await UniTask.WaitUntil(() => onMessageReceived);
             onMessageReceived = false;
@@ -150,8 +150,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTest]
         public IEnumerator SpawnWithClientOwnershipSub() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = new NgoConfig();
-            _ = await ngoClient.ConnectAsync(connectionConfig);
+            var ngoConfig = new NgoConfig();
+            _ = await ngoClient.ConnectAsync(ngoConfig);
 
             await UniTask.WaitUntil(() => onMessageReceived);
 
@@ -169,8 +169,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTest]
         public IEnumerator VisibilitySub() => UniTask.ToCoroutine(async () =>
         {
-            var connectionConfig = new NgoConfig();
-            _ = await ngoClient.ConnectAsync(connectionConfig);
+            var ngoConfig = new NgoConfig();
+            _ = await ngoClient.ConnectAsync(ngoConfig);
 
             await UniTask.WaitUntil(() => onMessageReceived);
             onMessageReceived = false;
