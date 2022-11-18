@@ -1,0 +1,15 @@
+{
+  "name": "jp.co.tis.extreal.integration.multiplay.ngo",
+  "version": "0.1.0",
+  "displayName": "Extreal.Integration.Multiplay.NGO",
+  "unity": "2021.3",
+  "author": {
+    "name": "TIS Inc."
+  },
+  "dependencies": {
+    "jp.co.tis.extreal.core.logging": "0.1.0",
+    "com.unity.netcode.gameobjects": "1.0.2",
+    "com.cysharp.unitask": "2.3.1",
+    "com.neuecc.unirx": "7.1.0"
+  }
+}

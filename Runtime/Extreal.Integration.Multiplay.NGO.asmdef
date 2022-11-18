@@ -1,0 +1,20 @@
+{
+    "name": "Extreal.Integration.Multiplay.NGO",
+    "rootNamespace": "Extreal.Integration.Multiplay.NGO",
+    "references": [
+        "Extreal.Core.Logging",
+        "Unity.Netcode.Runtime",
+        "Unity.Netcode.Components",
+        "UniTask",
+        "UniRx"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
