@@ -156,6 +156,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator StartServerWithConnectionApproval() => UniTask.ToCoroutine(async () =>
         {
+            networkManager.NetworkConfig.ConnectionApproval = true;
+
             var connectionApproved = false;
             ngoServer.SetConnectionApprovalCallback((request, response) =>
             {

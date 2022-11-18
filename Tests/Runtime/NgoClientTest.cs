@@ -37,6 +37,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             await SceneManager.LoadSceneAsync("Main");
 
             networkManager = UnityEngine.Object.FindObjectOfType<NetworkManager>();
+            networkManager.NetworkConfig.ConnectionApproval = true;
 
             ngoClient = new NgoClient(networkManager);
 

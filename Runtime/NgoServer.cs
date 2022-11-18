@@ -83,10 +83,6 @@ namespace Extreal.Integration.Multiplay.NGO
 
             this.networkManager = networkManager;
 
-            if (this.networkManager.NetworkConfig.ConnectionApproval)
-            {
-                this.networkManager.ConnectionApprovalCallback = (_, response) => response.Approved = true;
-            }
             this.networkManager.OnServerStarted += OnServerStartedEventHandler;
             this.networkManager.OnClientConnectedCallback += OnClientConnectedEventHandler;
             this.networkManager.OnClientDisconnectCallback += OnClientDisconnectEventHandler;

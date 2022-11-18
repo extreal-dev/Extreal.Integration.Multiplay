@@ -27,6 +27,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             ngoServer = new NgoServer(networkManager);
             serverMessagingManager = new ServerMessagingManager(ngoServer);
 
+            networkManager.NetworkConfig.ConnectionApproval = true;
             ngoServer.SetConnectionApprovalCallback((request, response)
                 => response.Approved = request.Payload.SequenceEqual(Array.Empty<byte>())
                                         || request.Payload.SequenceEqual(new byte[] { 3, 7, 7, 6 }));

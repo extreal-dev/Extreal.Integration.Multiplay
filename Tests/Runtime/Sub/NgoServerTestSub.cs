@@ -26,7 +26,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnitySetUp]
         public IEnumerator InitializeAsync() => UniTask.ToCoroutine(async () =>
         {
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
+            await UniTask.Delay(TimeSpan.FromSeconds(5));
 
             LoggingManager.Initialize(Core.Logging.LogLevel.Debug);
 
@@ -65,6 +65,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [UnityTest]
         public IEnumerator StartServerWithConnectionApprovalSub() => UniTask.ToCoroutine(async () =>
         {
+            networkManager.NetworkConfig.ConnectionApproval = true;
+
             var failedNgoConfig = new NgoConfig(connectionData: new byte[] { 1, 2, 3, 4 }, timeoutSeconds: 1);
 
             Exception exception = null;
