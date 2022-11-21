@@ -1,0 +1,29 @@
+{
+    "name": "Extreal.Integration.Multiplay.NGO.MVS.MultiplayServer",
+    "rootNamespace": "Extreal.Integration.Multiplay.NGO.MVS.MultiplayServer",
+    "references": [
+        "Unity.ResourceManager",
+        "Unity.Addressables",
+        "Unity.Netcode.Runtime",
+        "Unity.Netcode.Components",
+        "UniRx",
+        "UniTask",
+        "VContainer",
+        "Extreal.Core.Logging",
+        "Extreal.Integration.Multiplay.NGO",
+        "Extreal.Integration.Multiplay.NGO.MVS.Common"
+    ],
+    "includePlatforms": [
+        "Editor",
+        "EmbeddedLinux",
+        "WindowsStandalone64"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
