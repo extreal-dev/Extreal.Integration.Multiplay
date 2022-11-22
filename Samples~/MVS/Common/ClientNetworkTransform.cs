@@ -2,7 +2,7 @@
 
 namespace Extreal.Integration.Multiplay.NGO.MVS.Common
 {
-    public class ClientNetworkTransport : NetworkTransform
+    public class ClientNetworkTransform : NetworkTransform
     {
         protected override bool OnIsServerAuthoritative() => false;
     }
