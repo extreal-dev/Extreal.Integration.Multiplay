@@ -46,10 +46,6 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.MultiplayServer
 
         public void Start() => ngoServer.StartServerAsync().Forget();
 
-        public void Dispose()
-        {
-            compositeDisposable.Dispose();
-            ngoServer?.Dispose();
-        }
+        public void Dispose() => compositeDisposable.Dispose();
     }
 }
