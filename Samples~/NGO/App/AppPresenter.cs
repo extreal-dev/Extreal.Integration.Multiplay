@@ -8,6 +8,6 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.App
     {
         [Inject] private IStageNavigator<StageName> stageNavigator;
 
-        public void Start() => stageNavigator.ReplaceAsync(StageName.VirtualSpace);
+        public void Start() => stageNavigator.ReplaceAsync(StageName.Space);
     }
 }

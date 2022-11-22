@@ -14,9 +14,8 @@
   },
   "samples": [
     {
-      "displayName": "Minimum Viable Sample",
+      "displayName": "MVS",
       "path": "Samples~/MVS"
     }
   ]
 }
-

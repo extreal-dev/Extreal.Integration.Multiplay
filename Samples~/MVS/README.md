@@ -2,7 +2,7 @@
 
 ## Installation
 
-- Install packages that the sample depends on.
+- Install packages that the sample depends on from Package Manager.
   - Unity.Collections
   - Unity.InputSystem
   - Cinemachine
@@ -13,13 +13,21 @@
   - VContainer
   - Extreal.Core.Logging
   - Extreal.Core.StageNavigation
-- Install the sample from Package Manager.
+- Add symbols in Build Settings > Player Settings.
+  - Player > Other Settings > Script Compilation > Script Define Symbols
+  - Symbol: STARTER_ASSETS_PACKAGES_CHECKED
+- Install this sample from Package Manager.
 - Add the asset to Addressables.
   - Name: PlayerPrefab
-  - Path: MVS/Common/NetworkPlayer.prefab
+  - Path: MVS/Common/NetworkPlayer
 
 ## How to play
 
+- Add scenes to Build Settings.
+  - MVS/App/App
+  - MVS/MultiplayControl/MultiplayControl
+  - MVS/PlayerControl/PlayerControl
+  - MVS/VirtualSpace/VirtualSpace
 - Open multiple Unity editors using ParrelSync.
 - Start the server.
   - Scene: MVS/MultiplayServer/MultiplayServer

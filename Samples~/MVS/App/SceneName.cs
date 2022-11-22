@@ -2,6 +2,11 @@
 {
     public enum SceneName
     {
-        Space = 0
+        // Control
+        MultiplayControl = 100,
+        PlayerControl = 101,
+
+        // Space
+        VirtualSpace = 0
     }
 }

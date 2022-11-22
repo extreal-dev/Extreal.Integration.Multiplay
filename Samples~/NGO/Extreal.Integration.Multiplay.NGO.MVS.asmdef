@@ -2,7 +2,6 @@
     "name": "Extreal.Integration.Multiplay.NGO.MVS",
     "rootNamespace": "Extreal.Integration.Multiplay.NGO.MVS",
     "references": [
-        "Unity.Collections",
         "Unity.InputSystem",
         "Cinemachine",
         "Unity.Netcode.Runtime",
@@ -12,15 +11,9 @@
         "VContainer",
         "Extreal.Core.Logging",
         "Extreal.Core.StageNavigation",
-        "Extreal.Integration.Multiplay.NGO",
-        "Extreal.Integration.Multiplay.NGO.MVS.Common"
+        "Extreal.Integration.Multiplay.NGO"
     ],
-    "includePlatforms": [
-        "Android",
-        "Editor",
-        "iOS",
-        "WindowsStandalone64"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

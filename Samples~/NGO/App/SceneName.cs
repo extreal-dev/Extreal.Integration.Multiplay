@@ -1,7 +1,7 @@
 ﻿namespace Extreal.Integration.Multiplay.NGO.MVS.App
 {
-    public enum StageName
+    public enum SceneName
     {
-        VirtualSpace = 0
+        Space = 0
     }
 }
