@@ -13,9 +13,6 @@
   - VContainer
   - Extreal.Core.Logging
   - Extreal.Core.StageNavigation
-- Add symbols in Build Settings > Player Settings.
-  - Player > Other Settings > Script Compilation > Script Define Symbols
-  - Symbol: STARTER_ASSETS_PACKAGES_CHECKED
 - Install this sample from Package Manager.
 - Add the asset to Addressables.
   - Name: PlayerPrefab
