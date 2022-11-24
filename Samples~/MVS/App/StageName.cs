@@ -2,6 +2,6 @@
 {
     public enum StageName
     {
-        VirtualSpace = 0
+        VirtualStage = 0
     }
 }

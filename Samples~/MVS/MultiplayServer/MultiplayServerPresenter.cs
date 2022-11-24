@@ -6,7 +6,6 @@ using UniRx;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using VContainer;
 using VContainer.Unity;
 
 namespace Extreal.Integration.Multiplay.NGO.MVS.MultiplayServer
@@ -15,7 +14,9 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.MultiplayServer
     {
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(MultiplayServerPresenter));
 
-        [Inject] private NgoServer ngoServer;
+        private NgoServer ngoServer;
+
+        public MultiplayServerPresenter(NgoServer ngoServer) => this.ngoServer = ngoServer;
 
         private CompositeDisposable compositeDisposable = new CompositeDisposable();
 

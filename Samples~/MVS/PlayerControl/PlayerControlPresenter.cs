@@ -3,16 +3,17 @@ using Extreal.Integration.Multiplay.NGO.MVS.Common;
 using UniRx;
 using Unity.Collections;
 using Unity.Netcode;
-using VContainer;
 using VContainer.Unity;
 
 namespace Extreal.Integration.Multiplay.NGO.MVS.PlayerControl
 {
     public class PlayerControlPresenter : IInitializable, IDisposable
     {
-        [Inject] private NgoClient ngoClient;
+        private NgoClient ngoClient;
 
         private CompositeDisposable compositeDisposable = new CompositeDisposable();
+
+        public PlayerControlPresenter(NgoClient ngoClient) => this.ngoClient = ngoClient;
 
         public void Initialize() =>
             ngoClient.OnConnected.Subscribe(_ =>
