@@ -1,0 +1,19 @@
+{
+    "name": "Extreal.Integration.Multiplay.NGO.MVS.Common",
+    "rootNamespace": "Extreal.Integration.Multiplay.NGO.MVS.Common",
+    "references": [
+        "Unity.InputSystem",
+        "Cinemachine",
+        "Unity.Netcode.Runtime",
+        "Unity.Netcode.Components"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
