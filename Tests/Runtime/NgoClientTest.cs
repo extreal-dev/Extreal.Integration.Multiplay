@@ -53,7 +53,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
                 .Subscribe(_ => onUnexpectedDisconnected = true)
                 .AddTo(disposables);
 
-            _ = ngoClient.OnApprovalRejected
+            _ = ngoClient.OnConnectionApprovalRejected
                 .Subscribe(_ => onApprovalRejected = true)
                 .AddTo(disposables);
 
