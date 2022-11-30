@@ -25,7 +25,7 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.App
         protected override void Configure(IContainerBuilder builder)
         {
             builder.RegisterComponent(stageConfig).AsImplementedInterfaces();
-            builder.Register<StageNavigator<StageName, SceneName>>(Lifetime.Singleton).AsImplementedInterfaces();
+            builder.Register<StageNavigator<StageName, SceneName>>(Lifetime.Singleton);
 
             builder.RegisterEntryPoint<AppPresenter>();
         }
