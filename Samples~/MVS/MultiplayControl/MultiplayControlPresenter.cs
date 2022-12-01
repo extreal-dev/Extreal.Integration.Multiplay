@@ -2,24 +2,34 @@
 using Cysharp.Threading.Tasks;
 using Extreal.Core.StageNavigation;
 using Extreal.Integration.Multiplay.NGO.MVS.App;
+using UniRx;
 using VContainer.Unity;
 
 namespace Extreal.Integration.Multiplay.NGO.MVS.MultiplayControl
 {
     public class MultiplayControlPresenter : IInitializable, IDisposable
     {
-        private IStageNavigator<StageName> stageNavigator;
+        private StageNavigator<StageName, SceneName> stageNavigator;
         private NgoClient ngoClient;
 
-        public MultiplayControlPresenter(IStageNavigator<StageName> stageNavigator, NgoClient ngoClient)
+        private readonly CompositeDisposable compositeDisposable = new CompositeDisposable();
+
+        public MultiplayControlPresenter(StageNavigator<StageName, SceneName> stageNavigator, NgoClient ngoClient)
         {
             this.stageNavigator = stageNavigator;
             this.ngoClient = ngoClient;
         }
 
-        public void Initialize() => stageNavigator.OnStageTransitioned += OnStageTransitioned;
+        public void Initialize() =>
+            stageNavigator.OnStageTransitioned
+                .Subscribe(OnStageTransitioned)
+                .AddTo(compositeDisposable);
 
-        public void Dispose() => stageNavigator.OnStageTransitioned -= OnStageTransitioned;
+        public void Dispose()
+        {
+            compositeDisposable.Dispose();
+            GC.SuppressFinalize(this);
+        }
 
         public void OnStageTransitioned(StageName stageName)
         {

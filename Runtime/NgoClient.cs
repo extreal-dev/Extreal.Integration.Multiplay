@@ -37,8 +37,8 @@ namespace Extreal.Integration.Multiplay.NGO
         /// <summary>
         /// Invokes immediately after the connection approval is rejected from the server.
         /// </summary>
-        public IObservable<Unit> OnApprovalRejected => onApprovalRejected;
-        private readonly Subject<Unit> onApprovalRejected = new Subject<Unit>();
+        public IObservable<Unit> OnConnectionApprovalRejected => onConnectionApprovalRejected;
+        private readonly Subject<Unit> onConnectionApprovalRejected = new Subject<Unit>();
 
         private readonly NetworkManager networkManager;
         private readonly Dictionary<Type, IConnectionSetter> connectionSetters
@@ -89,7 +89,7 @@ namespace Extreal.Integration.Multiplay.NGO
             onConnected.Dispose();
             onDisconnecting.Dispose();
             onUnexpectedDisconnected.Dispose();
-            onApprovalRejected.Dispose();
+            onConnectionApprovalRejected.Dispose();
             GC.SuppressFinalize(this);
         }
 
@@ -298,7 +298,7 @@ namespace Extreal.Integration.Multiplay.NGO
                     Logger.LogDebug($"The connection was rejected by the server");
                 }
 
-                onApprovalRejected.OnNext(Unit.Default);
+                onConnectionApprovalRejected.OnNext(Unit.Default);
             }
         }
     }
