@@ -11,6 +11,6 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.App
         public AppPresenter(StageNavigator<StageName, SceneName> stageNavigator)
             => this.stageNavigator = stageNavigator;
 
-        public void Start() => stageNavigator.TransitionAsync(StageName.VirtualStage).Forget();
+        public void Start() => stageNavigator.ReplaceAsync(StageName.VirtualStage).Forget();
     }
 }
