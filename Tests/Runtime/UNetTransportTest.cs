@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using Cysharp.Threading.Tasks;
 using Extreal.Core.Logging;
@@ -55,7 +56,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator ConnectToServerSuccess() => UniTask.ToCoroutine(async () =>
         {
-            var ngoConfig = new NgoConfig(timeoutSeconds: 180);
+            var ngoConfig = new NgoConfig(timeout: TimeSpan.FromMinutes(3));
 
             Assert.IsFalse(onConnected);
             var result = await ngoClient.ConnectAsync(ngoConfig);

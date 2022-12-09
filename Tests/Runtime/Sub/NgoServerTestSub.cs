@@ -67,7 +67,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         {
             networkManager.NetworkConfig.ConnectionApproval = true;
 
-            var failedNgoConfig = new NgoConfig(connectionData: new byte[] { 1, 2, 3, 4 }, timeoutSeconds: 1);
+            var failedNgoConfig = new NgoConfig(connectionData: new byte[] { 1, 2, 3, 4 }, timeout: TimeSpan.FromSeconds(1));
 
             Exception exception = null;
             try
