@@ -29,23 +29,26 @@ namespace Extreal.Integration.Multiplay.NGO
         /// <summary>
         /// Uses when connection is not successful.
         /// </summary>
-        /// <value>Number of seconds to wait when connection is not successful.</value>
-        public byte TimeoutSeconds { get; internal set; }
+        /// <value>Time to wait when connection is not successful.</value>
+        public TimeSpan Timeout { get; internal set; }
 
         /// <summary>
-        /// Creates a new NgoConfig with given address, port, connectionData and timeoutSeconds.
+        /// Creates a new NgoConfig with given address, port, connectionData and timeout.
         /// </summary>
         /// <param name="address">IP Address to be used in connection.</param>
         /// <param name="port">Port to be used in connection.</param>
         /// <param name="connectionData">Connection data to be used in connection.</param>
-        /// <param name="timeoutSeconds">Number of seconds to wait when connection is not successful.</param>
+        /// <param name="timeout">
+        /// <para>Time to wait when connection is not successful.</para>
+        /// Default: 60 seconds
+        /// </param>
         /// <exception cref="ArgumentException">If the form of 'address' is invalid.</exception>
         public NgoConfig
         (
             string address = "127.0.0.1",
             ushort port = 7777,
             byte[] connectionData = null,
-            byte timeoutSeconds = 10
+            TimeSpan timeout = default
         )
         {
             if (!IPAddress.TryParse(address, out var _))
@@ -56,7 +59,7 @@ namespace Extreal.Integration.Multiplay.NGO
             Address = address;
             Port = port;
             ConnectionData = connectionData;
-            TimeoutSeconds = timeoutSeconds;
+            Timeout = timeout == default ? TimeSpan.FromSeconds(60) : timeout;
         }
     }
 }

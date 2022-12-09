@@ -161,7 +161,7 @@ namespace Extreal.Integration.Multiplay.NGO
             {
                 await UniTask
                     .WaitUntil(() => networkManager.IsConnectedClient, cancellationToken: token)
-                    .Timeout(TimeSpan.FromSeconds(ngoConfig.TimeoutSeconds));
+                    .Timeout(ngoConfig.Timeout);
             }
             catch (TimeoutException)
             {

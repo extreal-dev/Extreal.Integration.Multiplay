@@ -119,7 +119,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator ConnectWithConnectionData() => UniTask.ToCoroutine(async () =>
         {
-            var failedNgoConfig = new NgoConfig(connectionData: new byte[] { 1, 2, 3, 4 }, timeoutSeconds: 1);
+            var failedNgoConfig = new NgoConfig(connectionData: new byte[] { 1, 2, 3, 4 }, timeout: TimeSpan.FromSeconds(1));
 
             Exception exception = null;
             try
@@ -218,7 +218,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator ConnectWithTimeoutException() => UniTask.ToCoroutine(async () =>
         {
-            var ngoConfig = new NgoConfig(port: 7776, timeoutSeconds: 1);
+            var ngoConfig = new NgoConfig(port: 7776, timeout: TimeSpan.FromSeconds(1));
 
             Exception exception = null;
             try
