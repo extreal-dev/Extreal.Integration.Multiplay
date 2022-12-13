@@ -40,7 +40,7 @@ namespace Extreal.Integration.Multiplay.NGO
         /// <param name="connectionData">Connection data to be used in connection.</param>
         /// <param name="timeout">
         /// <para>Time to wait when connection is not successful.</para>
-        /// Default: 60 seconds
+        /// Default: 10 seconds
         /// </param>
         /// <exception cref="ArgumentException">If the form of 'address' is invalid.</exception>
         public NgoConfig
@@ -59,7 +59,7 @@ namespace Extreal.Integration.Multiplay.NGO
             Address = address;
             Port = port;
             ConnectionData = connectionData;
-            Timeout = timeout == default ? TimeSpan.FromSeconds(60) : timeout;
+            Timeout = timeout == default ? TimeSpan.FromSeconds(10) : timeout;
         }
     }
 }
