@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Extreal.Core.StageNavigation;
+using UnityEngine;
 
 namespace Extreal.Integration.Multiplay.NGO.MVS.App
 {
