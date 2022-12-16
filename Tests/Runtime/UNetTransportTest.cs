@@ -56,6 +56,8 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         [UnityTest]
         public IEnumerator ConnectToServerSuccess() => UniTask.ToCoroutine(async () =>
         {
+            await UniTask.Delay(TimeSpan.FromMinutes(1));
+
             var ngoConfig = new NgoConfig(timeout: TimeSpan.FromMinutes(3));
 
             Assert.IsFalse(onConnected);
