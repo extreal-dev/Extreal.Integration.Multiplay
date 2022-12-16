@@ -55,7 +55,12 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             clientMessagingManager.Dispose();
             ngoClient.Dispose();
             disposables.Clear();
-            await UniTask.Yield();
+
+            if (networkManager != null)
+            {
+                await UniTask.WaitUntil(() => !networkManager.ShutdownInProgress);
+                UnityEngine.Object.Destroy(networkManager.gameObject);
+            }
         });
 
         [OneTimeTearDown]
