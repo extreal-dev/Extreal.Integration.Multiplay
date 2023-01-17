@@ -13,13 +13,15 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.Common
     [RequireComponent(typeof(PlayerInput))]
     public class NetworkThirdPersonController : NetworkBehaviour
     {
-        [Header("Player")] [Tooltip("Move speed of the character in m/s")]
+        [Header("Player")]
+        [Tooltip("Move speed of the character in m/s")]
         public float MoveSpeed = 2.0f;
 
         [Tooltip("Sprint speed of the character in m/s")]
         public float SprintSpeed = 5.335f;
 
-        [Tooltip("How fast the character turns to face movement direction")] [Range(0.0f, 0.3f)]
+        [Tooltip("How fast the character turns to face movement direction")]
+        [Range(0.0f, 0.3f)]
         public float RotationSmoothTime = 0.12f;
 
         [Tooltip("Acceleration and deceleration")]
@@ -29,7 +31,8 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.Common
         public AudioClip[] FootstepAudioClips;
         [Range(0, 1)] public float FootstepAudioVolume = 0.5f;
 
-        [Space(10)] [Tooltip("The height the player can jump")]
+        [Space(10)]
+        [Tooltip("The height the player can jump")]
         public float JumpHeight = 1.2f;
 
         [Tooltip("The character uses its own gravity value. The engine default is -9.81f")]
@@ -104,13 +107,7 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.Common
 
         private bool _hasAnimator;
 
-        private bool IsCurrentDeviceMouse
-        {
-            get
-            {
-                return _playerInput.currentControlScheme == "KeyboardMouse";
-            }
-        }
+        private bool IsCurrentDeviceMouse => _playerInput.currentControlScheme == "KeyboardMouse";
 
 
         private void Awake()
@@ -166,10 +163,7 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.Common
             }
         }
 
-        private void LateUpdate()
-        {
-            CameraRotation();
-        }
+        private void LateUpdate() => CameraRotation();
 
         private void AssignAnimationIDs()
         {
@@ -183,7 +177,7 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.Common
         private void GroundedCheck()
         {
             // set sphere position, with offset
-            Vector3 spherePosition = new Vector3(transform.position.x, transform.position.y - GroundedOffset,
+            var spherePosition = new Vector3(transform.position.x, transform.position.y - GroundedOffset,
                 transform.position.z);
             Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, GroundLayers,
                 QueryTriggerInteraction.Ignore);
@@ -201,7 +195,7 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.Common
             if (_input.look.sqrMagnitude >= _threshold && !LockCameraPosition)
             {
                 //Don't multiply mouse input by Time.deltaTime;
-                float deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
+                var deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
 
                 _cinemachineTargetYaw += _input.look.x * deltaTimeMultiplier;
                 _cinemachineTargetPitch += _input.look.y * deltaTimeMultiplier;
@@ -219,19 +213,22 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.Common
         private void Move()
         {
             // set target speed based on move speed, sprint speed and if sprint is pressed
-            float targetSpeed = _input.sprint ? SprintSpeed : MoveSpeed;
+            var targetSpeed = _input.sprint ? SprintSpeed : MoveSpeed;
 
             // a simplistic acceleration and deceleration designed to be easy to remove, replace, or iterate upon
 
             // note: Vector2's == operator uses approximation so is not floating point error prone, and is cheaper than magnitude
             // if there is no input, set the target speed to 0
-            if (_input.move == Vector2.zero) targetSpeed = 0.0f;
+            if (_input.move == Vector2.zero)
+            {
+                targetSpeed = 0.0f;
+            }
 
             // a reference to the players current horizontal velocity
-            float currentHorizontalSpeed = new Vector3(_controller.velocity.x, 0.0f, _controller.velocity.z).magnitude;
+            var currentHorizontalSpeed = new Vector3(_controller.velocity.x, 0.0f, _controller.velocity.z).magnitude;
 
-            float speedOffset = 0.1f;
-            float inputMagnitude = _input.analogMovement ? _input.move.magnitude : 1f;
+            var speedOffset = 0.1f;
+            var inputMagnitude = _input.analogMovement ? _input.move.magnitude : 1f;
 
             // accelerate or decelerate to target speed
             if (currentHorizontalSpeed < targetSpeed - speedOffset ||
@@ -251,18 +248,21 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.Common
             }
 
             _animationBlend = Mathf.Lerp(_animationBlend, targetSpeed, Time.deltaTime * SpeedChangeRate);
-            if (_animationBlend < 0.01f) _animationBlend = 0f;
+            if (_animationBlend < 0.01f)
+            {
+                _animationBlend = 0f;
+            }
 
             // normalise input direction
-            Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
+            var inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
 
             // note: Vector2's != operator uses approximation so is not floating point error prone, and is cheaper than magnitude
             // if there is a move input rotate player when the player is moving
             if (_input.move != Vector2.zero)
             {
-                _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
+                _targetRotation = (Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg) +
                                   _mainCamera.transform.eulerAngles.y;
-                float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
+                var rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
                     RotationSmoothTime);
 
                 // rotate to face input direction relative to camera position
@@ -270,11 +270,11 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.Common
             }
 
 
-            Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
+            var targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
 
             // move the player
-            _controller.Move(targetDirection.normalized * (_speed * Time.deltaTime) +
-                             new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
+            _controller.Move((targetDirection.normalized * (_speed * Time.deltaTime)) +
+                             (new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime));
 
             // update animator if using character
             if (_hasAnimator)
@@ -355,18 +355,32 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.Common
 
         private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
         {
-            if (lfAngle < -360f) lfAngle += 360f;
-            if (lfAngle > 360f) lfAngle -= 360f;
+            if (lfAngle < -360f)
+            {
+                lfAngle += 360f;
+            }
+
+            if (lfAngle > 360f)
+            {
+                lfAngle -= 360f;
+            }
+
             return Mathf.Clamp(lfAngle, lfMin, lfMax);
         }
 
         private void OnDrawGizmosSelected()
         {
-            Color transparentGreen = new Color(0.0f, 1.0f, 0.0f, 0.35f);
-            Color transparentRed = new Color(1.0f, 0.0f, 0.0f, 0.35f);
+            var transparentGreen = new Color(0.0f, 1.0f, 0.0f, 0.35f);
+            var transparentRed = new Color(1.0f, 0.0f, 0.0f, 0.35f);
 
-            if (Grounded) Gizmos.color = transparentGreen;
-            else Gizmos.color = transparentRed;
+            if (Grounded)
+            {
+                Gizmos.color = transparentGreen;
+            }
+            else
+            {
+                Gizmos.color = transparentRed;
+            }
 
             // when selected, draw a gizmo in the position of, and matching radius of, the grounded collider
             Gizmos.DrawSphere(

@@ -10,7 +10,10 @@ namespace StarterAssets
 
         private void OnControllerColliderHit(ControllerColliderHit hit)
         {
-            if (canPush) PushRigidBodies(hit);
+            if (canPush)
+            {
+                PushRigidBodies(hit);
+            }
         }
 
         private void PushRigidBodies(ControllerColliderHit hit)
@@ -18,18 +21,27 @@ namespace StarterAssets
             // https://docs.unity3d.com/ScriptReference/CharacterController.OnControllerColliderHit.html
 
             // make sure we hit a non kinematic rigidbody
-            Rigidbody body = hit.collider.attachedRigidbody;
-            if (body == null || body.isKinematic) return;
+            var body = hit.collider.attachedRigidbody;
+            if (body == null || body.isKinematic)
+            {
+                return;
+            }
 
             // make sure we only push desired layer(s)
             var bodyLayerMask = 1 << body.gameObject.layer;
-            if ((bodyLayerMask & pushLayers.value) == 0) return;
+            if ((bodyLayerMask & pushLayers.value) == 0)
+            {
+                return;
+            }
 
             // We dont want to push objects below us
-            if (hit.moveDirection.y < -0.3f) return;
+            if (hit.moveDirection.y < -0.3f)
+            {
+                return;
+            }
 
             // Calculate push direction from move direction, horizontal motion only
-            Vector3 pushDir = new Vector3(hit.moveDirection.x, 0.0f, hit.moveDirection.z);
+            var pushDir = new Vector3(hit.moveDirection.x, 0.0f, hit.moveDirection.z);
 
             // Apply the push and take strength into account
             body.AddForce(pushDir * strength, ForceMode.Impulse);

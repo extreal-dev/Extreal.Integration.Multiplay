@@ -1,6 +1,6 @@
-using UnityEngine;
-using UnityEngine.EventSystems;
+﻿using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 
 public class UIVirtualTouchZone : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
 {
@@ -24,16 +24,13 @@ public class UIVirtualTouchZone : MonoBehaviour, IPointerDownHandler, IDragHandl
     [Header("Output")]
     public Event touchZoneOutputEvent;
 
-    void Start()
-    {
-        SetupHandle();
-    }
+    private void Start() => SetupHandle();
 
     private void SetupHandle()
     {
-        if(handleRect)
+        if (handleRect)
         {
-            SetObjectActiveState(handleRect.gameObject, false); 
+            SetObjectActiveState(handleRect.gameObject, false);
         }
     }
 
@@ -42,7 +39,7 @@ public class UIVirtualTouchZone : MonoBehaviour, IPointerDownHandler, IDragHandl
 
         RectTransformUtility.ScreenPointToLocalPointInRectangle(containerRect, eventData.position, eventData.pressEventCamera, out pointerDownPosition);
 
-        if(handleRect)
+        if (handleRect)
         {
             SetObjectActiveState(handleRect.gameObject, true);
             UpdateHandleRectPosition(pointerDownPosition);
@@ -53,12 +50,12 @@ public class UIVirtualTouchZone : MonoBehaviour, IPointerDownHandler, IDragHandl
     {
 
         RectTransformUtility.ScreenPointToLocalPointInRectangle(containerRect, eventData.position, eventData.pressEventCamera, out currentPointerPosition);
-        
-        Vector2 positionDelta = GetDeltaBetweenPositions(pointerDownPosition, currentPointerPosition);
 
-        Vector2 clampedPosition = ClampValuesToMagnitude(positionDelta);
-        
-        Vector2 outputPosition = ApplyInversionFilter(clampedPosition);
+        var positionDelta = GetDeltaBetweenPositions(pointerDownPosition, currentPointerPosition);
+
+        var clampedPosition = ClampValuesToMagnitude(positionDelta);
+
+        var outputPosition = ApplyInversionFilter(clampedPosition);
 
         OutputPointerEventValue(outputPosition * magnitudeMultiplier);
     }
@@ -70,46 +67,31 @@ public class UIVirtualTouchZone : MonoBehaviour, IPointerDownHandler, IDragHandl
 
         OutputPointerEventValue(Vector2.zero);
 
-        if(handleRect)
+        if (handleRect)
         {
             SetObjectActiveState(handleRect.gameObject, false);
             UpdateHandleRectPosition(Vector2.zero);
         }
     }
 
-    void OutputPointerEventValue(Vector2 pointerPosition)
-    {
-        touchZoneOutputEvent.Invoke(pointerPosition);
-    }
+    private void OutputPointerEventValue(Vector2 pointerPosition) => touchZoneOutputEvent.Invoke(pointerPosition);
 
-    void UpdateHandleRectPosition(Vector2 newPosition)
-    {
-        handleRect.anchoredPosition = newPosition;
-    }
+    private void UpdateHandleRectPosition(Vector2 newPosition) => handleRect.anchoredPosition = newPosition;
 
-    void SetObjectActiveState(GameObject targetObject, bool newState)
-    {
-        targetObject.SetActive(newState);
-    }
+    private void SetObjectActiveState(GameObject targetObject, bool newState) => targetObject.SetActive(newState);
 
-    Vector2 GetDeltaBetweenPositions(Vector2 firstPosition, Vector2 secondPosition)
-    {
-        return secondPosition - firstPosition;
-    }
+    private Vector2 GetDeltaBetweenPositions(Vector2 firstPosition, Vector2 secondPosition) => secondPosition - firstPosition;
 
-    Vector2 ClampValuesToMagnitude(Vector2 position)
-    {
-        return Vector2.ClampMagnitude(position, 1);
-    }
+    private Vector2 ClampValuesToMagnitude(Vector2 position) => Vector2.ClampMagnitude(position, 1);
 
-    Vector2 ApplyInversionFilter(Vector2 position)
+    private Vector2 ApplyInversionFilter(Vector2 position)
     {
-        if(invertXOutputValue)
+        if (invertXOutputValue)
         {
             position.x = InvertValue(position.x);
         }
 
-        if(invertYOutputValue)
+        if (invertYOutputValue)
         {
             position.y = InvertValue(position.y);
         }
@@ -117,9 +99,6 @@ public class UIVirtualTouchZone : MonoBehaviour, IPointerDownHandler, IDragHandl
         return position;
     }
 
-    float InvertValue(float value)
-    {
-        return -value;
-    }
-    
+    private float InvertValue(float value) => -value;
+
 }
