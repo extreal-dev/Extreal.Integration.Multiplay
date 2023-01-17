@@ -1,4 +1,4 @@
-namespace Extreal.Integration.Multiplay.NGO.Test.Sub
+﻿namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 {
     public enum MessageName
     {

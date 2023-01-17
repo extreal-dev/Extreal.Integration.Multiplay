@@ -1,12 +1,8 @@
 {
-    "name": "Extreal.Integration.Multiplay.NGO.MVS.Common",
-    "rootNamespace": "Extreal.Integration.Multiplay.NGO.MVS.Common",
+    "name": "StarterAssets",
+    "rootNamespace": "StarterAssets",
     "references": [
-        "Unity.InputSystem",
-        "Cinemachine",
-        "Unity.Netcode.Runtime",
-        "Unity.Netcode.Components",
-        "StarterAssets"
+        "GUID:75469ad4d38634e559750d17036d5f7c"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -22,15 +22,9 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.MultiplayServer
 
         public void Initialize()
         {
-            ngoServer.OnServerStarted.Subscribe(_ =>
-            {
-                ngoServer.RegisterMessageHandler(MessageName.PlayerSpawn.ToString(), PlayerSpawnMessageHandler);
-            }).AddTo(compositeDisposable);
+            ngoServer.OnServerStarted.Subscribe(_ => ngoServer.RegisterMessageHandler(MessageName.PlayerSpawn.ToString(), PlayerSpawnMessageHandler)).AddTo(compositeDisposable);
 
-            ngoServer.OnServerStopping.Subscribe(_ =>
-            {
-                ngoServer.UnregisterMessageHandler(MessageName.PlayerSpawn.ToString());
-            }).AddTo(compositeDisposable);
+            ngoServer.OnServerStopping.Subscribe(_ => ngoServer.UnregisterMessageHandler(MessageName.PlayerSpawn.ToString())).AddTo(compositeDisposable);
         }
 
         private async void PlayerSpawnMessageHandler(ulong clientId, FastBufferReader messageStream)
