@@ -1,13 +1,19 @@
-# Describe Your Changes (なんの変更を加えましたか?)
+# 何の変更を加えましたか？
 
-# What did you verify? (何を確認しましたか?)
+# 何を確認しましたか?
 
-- [ ] Verified that processing for invalid arguments and invalid method calls is included (無効な引数や無効なメソッド呼び出しに対する処理が入っていることを確認しました)
-- [ ] Verified that debug logs are being output to show behavior at runtime (実行時の動作が分かるようなデバッグログを出力していることを確認しました)
-- [ ] Verified that no problems were found in the static analysis (静的解析で問題が見つからないことを確認しました)
-- [ ] Verified that all tests succeeded (全てのテストが成功することを確認しました)
-- [ ] Verified that test coverage is 100% (テストカバレッジが100%になることを確認しました)
+## 実装
+- [ ] Frameworkの誤った使い方にすぐに気づけるように、無効な引数や無効なメソッド呼び出しに対するチェックが入っていることを確認しました
+- [ ] Framework実行時の動きが分かるように、ログ（Error/Warn/Info/Debug）を出力していることを確認しました
+- [ ] 静的解析で問題が見つからないことを確認しました
+## テスト
+- [ ] 全ての自動テストが成功することを確認しました
+- [ ] テストカバレッジが100%になることを確認しました
+- [ ] サンプルがあるものはサンプルが動作することを確認しました
+## 変更影響
+- [ ] GuideのReleaseページに変更内容が追加されることを確認しました
+- [ ] GuideのModuleページ（機能ページ）に変更が反映されることを確認しました
+- [ ] GuideのLearningページに変更が反映されることを確認しました
+- [ ] Sample Applicationに変更が反映されることを確認しました
 
-# Message to reviewers (レビュアーへのメッセージ)
-
-
+# レビュアーへのメッセージ
