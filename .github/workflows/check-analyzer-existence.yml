@@ -3,6 +3,7 @@ name: Check analyzer existence
 on:
   pull_request:
     branches:
+      - main
       - develop
 
 jobs:
