@@ -1,5 +1,6 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
+using Extreal.Core.Common.System;
 using Extreal.Core.Logging;
 using Extreal.Integration.Multiplay.NGO.MVS.Common;
 using UniRx;
@@ -10,7 +11,7 @@ using VContainer.Unity;
 
 namespace Extreal.Integration.Multiplay.NGO.MVS.MultiplayServer
 {
-    public class MultiplayServerPresenter : IInitializable, IStartable, IDisposable
+    public class MultiplayServerPresenter : DisposableBase, IInitializable, IStartable
     {
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(MultiplayServerPresenter));
 
@@ -41,6 +42,6 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.MultiplayServer
 
         public void Start() => ngoServer.StartServerAsync().Forget();
 
-        public void Dispose() => compositeDisposable.Dispose();
+        protected override void ReleaseManagedResources() => compositeDisposable.Dispose();
     }
 }

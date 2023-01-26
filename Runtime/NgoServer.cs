@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Extreal.Core.Common.System;
 using Extreal.Core.Logging;
 using UniRx;
 using Unity.Netcode;
@@ -16,7 +17,7 @@ namespace Extreal.Integration.Multiplay.NGO
     /// <summary>
     /// Class that handles NetworkManager as a server.
     /// </summary>
-    public class NgoServer : IDisposable
+    public class NgoServer : DisposableBase
     {
         /// <summary>
         /// Invokes immediately after this server starts.
@@ -88,10 +89,8 @@ namespace Extreal.Integration.Multiplay.NGO
             this.networkManager.OnClientDisconnectCallback += OnClientDisconnectEventHandler;
         }
 
-        /// <summary>
-        /// Finalizes NgoServer.
-        /// </summary>
-        public void Dispose()
+        /// <inheritdoc/>
+        protected override void ReleaseManagedResources()
         {
             if (Logger.IsDebug())
             {
@@ -112,7 +111,6 @@ namespace Extreal.Integration.Multiplay.NGO
             onClientConnected.Dispose();
             onClientDisconnecting.Dispose();
             onClientRemoving.Dispose();
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>

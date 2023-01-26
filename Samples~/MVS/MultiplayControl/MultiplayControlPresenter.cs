@@ -1,5 +1,6 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
+using Extreal.Core.Common.System;
 using Extreal.Core.StageNavigation;
 using Extreal.Integration.Multiplay.NGO.MVS.App;
 using UniRx;
@@ -7,7 +8,7 @@ using VContainer.Unity;
 
 namespace Extreal.Integration.Multiplay.NGO.MVS.MultiplayControl
 {
-    public class MultiplayControlPresenter : IInitializable, IDisposable
+    public class MultiplayControlPresenter : DisposableBase, IInitializable
     {
         private StageNavigator<StageName, SceneName> stageNavigator;
         private NgoClient ngoClient;
@@ -25,11 +26,7 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.MultiplayControl
                 .Subscribe(OnStageTransitioned)
                 .AddTo(compositeDisposable);
 
-        public void Dispose()
-        {
-            compositeDisposable.Dispose();
-            GC.SuppressFinalize(this);
-        }
+        protected override void ReleaseManagedResources() => compositeDisposable.Dispose();
 
         public void OnStageTransitioned(StageName stageName)
         {

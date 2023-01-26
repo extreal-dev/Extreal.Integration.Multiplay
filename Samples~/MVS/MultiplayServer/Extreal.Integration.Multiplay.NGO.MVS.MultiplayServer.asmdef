@@ -11,7 +11,8 @@
         "VContainer",
         "Extreal.Core.Logging",
         "Extreal.Integration.Multiplay.NGO",
-        "Extreal.Integration.Multiplay.NGO.MVS.Common"
+        "Extreal.Integration.Multiplay.NGO.MVS.Common",
+        "Extreal.Core.Common"
     ],
     "includePlatforms": [
         "Editor",
