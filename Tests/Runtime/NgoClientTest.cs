@@ -336,7 +336,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
         [Test]
         public void RegisterMessageHandlerWithoutConnect()
-            => Assert.That(() => ngoClient.RegisterMessageHandler("TestMessage", (_, _) => { return; }),
+            => Assert.That(() => ngoClient.RegisterMessageHandler("TestMessage", (_, _) => { }),
                 Throws.TypeOf<InvalidOperationException>()
                     .With.Message.EqualTo("This client is not running"));
 
@@ -348,7 +348,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             Assert.IsTrue(networkManager.IsConnectedClient);
 
             const string nullMessageName = null;
-            Assert.That(() => ngoClient.RegisterMessageHandler(nullMessageName, (_, _) => { return; }),
+            Assert.That(() => ngoClient.RegisterMessageHandler(nullMessageName, (_, _) => { }),
                 Throws.TypeOf<ArgumentNullException>()
                     .With.Message.Contains("messageName"));
         });
