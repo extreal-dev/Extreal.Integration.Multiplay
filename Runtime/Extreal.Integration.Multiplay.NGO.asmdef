@@ -7,8 +7,7 @@
         "Unity.Netcode.Runtime",
         "Unity.Netcode.Components",
         "UniTask",
-        "UniRx",
-        "Extreal.Framework.Analyzer"
+        "UniRx"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

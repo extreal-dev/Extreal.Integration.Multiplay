@@ -10,8 +10,7 @@
         "UniRx",
         "Extreal.Core.Logging",
         "Extreal.Core.Common",
-        "Unity.Collections",
-        "Extreal.Framework.Analyzer"
+        "Unity.Collections"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

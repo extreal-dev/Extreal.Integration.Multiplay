@@ -11,8 +11,7 @@
         "Extreal.Core.Logging",
         "Extreal.Core.Common",
         "Unity.Collections",
-        "Extreal.Integration.Multiplay.NGO.Test.Sub",
-        "Extreal.Framework.Analyzer"
+        "Extreal.Integration.Multiplay.NGO.Test.Sub"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
