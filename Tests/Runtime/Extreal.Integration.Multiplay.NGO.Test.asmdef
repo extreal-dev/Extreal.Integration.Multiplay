@@ -9,6 +9,7 @@
         "UniTask",
         "UniRx",
         "Extreal.Core.Logging",
+        "Extreal.Core.Common",
         "Unity.Collections",
         "Extreal.Integration.Multiplay.NGO.Test.Sub"
     ],

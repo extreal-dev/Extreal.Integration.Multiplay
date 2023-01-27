@@ -11,7 +11,6 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
     public class ServerMain : MonoBehaviour
     {
         [SerializeField] private NetworkManager networkManager;
-        [SerializeField] private NetworkObject networkObjectPrefab;
 
         private NgoServer ngoServer;
         private ServerMessagingManager serverMessagingManager;
@@ -42,7 +41,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 
         private void OnEnable()
             => serverMessagingManager.OnMessageReceived
-                .Subscribe(arg =>
+                .Subscribe(_ =>
                 {
 #pragma warning disable CC0120
 #pragma warning disable IDE0010

@@ -1,4 +1,5 @@
 ﻿using System;
+using Extreal.Core.Common.System;
 using Extreal.Integration.Multiplay.NGO.MVS.Common;
 using UniRx;
 using Unity.Collections;
@@ -7,7 +8,7 @@ using VContainer.Unity;
 
 namespace Extreal.Integration.Multiplay.NGO.MVS.PlayerControl
 {
-    public class PlayerControlPresenter : IInitializable, IDisposable
+    public class PlayerControlPresenter : DisposableBase, IInitializable
     {
         private NgoClient ngoClient;
 
@@ -22,6 +23,6 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.PlayerControl
                 ngoClient.SendMessage(MessageName.PlayerSpawn.ToString(), messageStream);
             }).AddTo(compositeDisposable);
 
-        public void Dispose() => compositeDisposable.Dispose();
+        protected override void ReleaseManagedResources() => compositeDisposable.Dispose();
     }
 }

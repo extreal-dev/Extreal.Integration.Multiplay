@@ -9,6 +9,7 @@
         "UniTask",
         "UniRx",
         "Extreal.Core.Logging",
+        "Extreal.Core.Common",
         "Unity.Collections"
     ],
     "includePlatforms": [],

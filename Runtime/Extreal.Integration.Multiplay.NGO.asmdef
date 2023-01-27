@@ -3,6 +3,7 @@
     "rootNamespace": "Extreal.Integration.Multiplay.NGO",
     "references": [
         "Extreal.Core.Logging",
+        "Extreal.Core.Common",
         "Unity.Netcode.Runtime",
         "Unity.Netcode.Components",
         "UniTask",

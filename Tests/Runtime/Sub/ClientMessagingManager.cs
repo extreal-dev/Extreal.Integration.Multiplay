@@ -1,11 +1,12 @@
 ﻿using System;
+using Extreal.Core.Common.System;
 using UniRx;
 using Unity.Collections;
 using Unity.Netcode;
 
 namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 {
-    public class ClientMessagingManager : IDisposable
+    public class ClientMessagingManager : DisposableBase
     {
         public IObservable<Unit> OnMessageReceived => onMessageReceived;
         private readonly Subject<Unit> onMessageReceived = new Subject<Unit>();
@@ -43,11 +44,10 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
                 .AddTo(disposables);
         }
 
-        public void Dispose()
+        protected override void ReleaseManagedResources()
         {
             onMessageReceived.Dispose();
             disposables.Dispose();
-            GC.SuppressFinalize(this);
         }
 
         public void SendRestartServer()
