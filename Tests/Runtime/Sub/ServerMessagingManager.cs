@@ -31,16 +31,16 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             _ = ngoServer.OnServerStarted
                 .Subscribe(_ =>
                 {
-                    ngoServer.RegisterMessageHandler(MessageName.RESTART_TO_SERVER.ToString(), ReceivedRestartServer);
-                    ngoServer.RegisterMessageHandler(MessageName.HELLO_WORLD_TO_SERVER.ToString(), ReceivedHelloWorld);
+                    ngoServer.RegisterMessageHandler(MessageName.RestartToServer.ToString(), ReceivedRestartServer);
+                    ngoServer.RegisterMessageHandler(MessageName.HelloWorldToServer.ToString(), ReceivedHelloWorld);
                 })
                 .AddTo(disposables);
 
             _ = ngoServer.OnServerStopping
                 .Subscribe(_ =>
                 {
-                    ngoServer.UnregisterMessageHandler(MessageName.RESTART_TO_SERVER.ToString());
-                    ngoServer.UnregisterMessageHandler(MessageName.HELLO_WORLD_TO_SERVER.ToString());
+                    ngoServer.UnregisterMessageHandler(MessageName.RestartToServer.ToString());
+                    ngoServer.UnregisterMessageHandler(MessageName.HelloWorldToServer.ToString());
                 })
                 .AddTo(disposables);
         }
@@ -54,14 +54,14 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         public void ReceivedRestartServer(ulong clientId, FastBufferReader reader)
         {
             ReceivedClientId = clientId;
-            ReceivedMessageName = MessageName.RESTART_TO_SERVER;
+            ReceivedMessageName = MessageName.RestartToServer;
             ReceivedInternal(reader);
         }
 
         public void ReceivedHelloWorld(ulong clientId, FastBufferReader reader)
         {
             ReceivedClientId = clientId;
-            ReceivedMessageName = MessageName.HELLO_WORLD_TO_SERVER;
+            ReceivedMessageName = MessageName.HelloWorldToServer;
             ReceivedInternal(reader);
         }
 
@@ -76,14 +76,14 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         public void SendHelloWorldToClients(List<ulong> clientIds)
         {
             SendClientIds = clientIds;
-            SendMessageName = MessageName.HELLO_WORLD_TO_CLIENT;
+            SendMessageName = MessageName.HelloWorldToClient;
             SendMessageText = "Hello World";
             SendInternal(SendType.ToClient);
         }
 
         public void SendHelloWorldToAllClients()
         {
-            SendMessageName = MessageName.HELLO_WORLD_TO_ALL_CLIENTS;
+            SendMessageName = MessageName.HelloWorldToAllClients;
             SendMessageText = "Hello World";
             SendInternal(SendType.ToAllClients);
         }

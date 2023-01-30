@@ -28,18 +28,18 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             _ = ngoClient.OnConnected
                 .Subscribe(_ =>
                 {
-                    ngoClient.RegisterMessageHandler(MessageName.HELLO_WORLD_TO_CLIENT.ToString(), ReceivedHelloWorldToClient);
-                    ngoClient.RegisterMessageHandler(MessageName.HELLO_WORLD_TO_ALL_CLIENTS.ToString(), ReceivedHelloWorldToAllClients);
-                    ngoClient.RegisterMessageHandler(MessageName.HELLO_WORLD_TO_ALL_CLIENTS_EXCEPT.ToString(), ReceivedHelloWorldToAllClientsExcept);
+                    ngoClient.RegisterMessageHandler(MessageName.HelloWorldToClient.ToString(), ReceivedHelloWorldToClient);
+                    ngoClient.RegisterMessageHandler(MessageName.HelloWorldToAllClients.ToString(), ReceivedHelloWorldToAllClients);
+                    ngoClient.RegisterMessageHandler(MessageName.HelloWorldToAllClientsExcept.ToString(), ReceivedHelloWorldToAllClientsExcept);
                 })
                 .AddTo(disposables);
 
             _ = ngoClient.OnDisconnecting
                 .Subscribe(_ =>
                 {
-                    ngoClient.UnregisterMessageHandler(MessageName.HELLO_WORLD_TO_CLIENT.ToString());
-                    ngoClient.UnregisterMessageHandler(MessageName.HELLO_WORLD_TO_ALL_CLIENTS.ToString());
-                    ngoClient.UnregisterMessageHandler(MessageName.HELLO_WORLD_TO_ALL_CLIENTS_EXCEPT.ToString());
+                    ngoClient.UnregisterMessageHandler(MessageName.HelloWorldToClient.ToString());
+                    ngoClient.UnregisterMessageHandler(MessageName.HelloWorldToAllClients.ToString());
+                    ngoClient.UnregisterMessageHandler(MessageName.HelloWorldToAllClientsExcept.ToString());
                 })
                 .AddTo(disposables);
         }
@@ -52,14 +52,14 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 
         public void SendRestartServer()
         {
-            SendMessageName = MessageName.RESTART_TO_SERVER;
+            SendMessageName = MessageName.RestartToServer;
             SendMessageText = "Restart Server";
             SendInternal();
         }
 
         public void SendHelloWorld()
         {
-            SendMessageName = MessageName.HELLO_WORLD_TO_SERVER;
+            SendMessageName = MessageName.HelloWorldToServer;
             SendMessageText = "Hello World";
             SendInternal();
         }
@@ -74,21 +74,21 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeCracker", "CC0057")]
         private void ReceivedHelloWorldToClient(ulong serverId, FastBufferReader reader)
         {
-            ReceivedMessageName = MessageName.HELLO_WORLD_TO_CLIENT;
+            ReceivedMessageName = MessageName.HelloWorldToClient;
             ReceivedInternal(reader);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeCracker", "CC0057")]
         private void ReceivedHelloWorldToAllClients(ulong serverId, FastBufferReader reader)
         {
-            ReceivedMessageName = MessageName.HELLO_WORLD_TO_ALL_CLIENTS;
+            ReceivedMessageName = MessageName.HelloWorldToAllClients;
             ReceivedInternal(reader);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeCracker", "CC0057")]
         private void ReceivedHelloWorldToAllClientsExcept(ulong serverId, FastBufferReader reader)
         {
-            ReceivedMessageName = MessageName.HELLO_WORLD_TO_ALL_CLIENTS_EXCEPT;
+            ReceivedMessageName = MessageName.HelloWorldToAllClientsExcept;
             ReceivedInternal(reader);
         }
 

@@ -139,7 +139,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         public IEnumerator SetConnectionApprovalCallbackWithConnectionApprovalFalse() => UniTask.ToCoroutine(async () =>
         {
             networkManager.NetworkConfig.ConnectionApproval = false;
-            ngoServer.SetConnectionApprovalCallback((_, _) => { return; });
+            ngoServer.SetConnectionApprovalCallback((_, _) => { });
             await ngoServer.StartServerAsync();
             LogAssert.Expect(LogType.Warning, "[Netcode] A ConnectionApproval callback is defined but ConnectionApproval is disabled. In order to use ConnectionApproval it has to be explicitly enabled ");
         });
@@ -290,7 +290,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
             await UniTask.WaitUntil(() => onMessageReceived);
             Assert.AreEqual(connectedClientId, serverMessagingManager.ReceivedClientId);
-            Assert.AreEqual(MessageName.HELLO_WORLD_TO_SERVER, serverMessagingManager.ReceivedMessageName);
+            Assert.AreEqual(MessageName.HelloWorldToServer, serverMessagingManager.ReceivedMessageName);
             Assert.AreEqual("Hello World", serverMessagingManager.ReceivedMessageText);
 
             await UniTask.WaitUntil(() => onClientDisconnecting);
@@ -393,7 +393,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
         [Test]
         public void RegisterMessageHandlerWithoutConnect()
-            => Assert.That(() => ngoServer.RegisterMessageHandler("TestMessage", (_, _) => { return; }),
+            => Assert.That(() => ngoServer.RegisterMessageHandler("TestMessage", (_, _) => { }),
                 Throws.TypeOf<InvalidOperationException>()
                     .With.Message.EqualTo("This server is not running"));
 
@@ -404,7 +404,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             Assert.IsTrue(networkManager.IsServer);
 
             const string nullMessageName = null;
-            Assert.That(() => ngoServer.RegisterMessageHandler(nullMessageName, (_, _) => { return; }),
+            Assert.That(() => ngoServer.RegisterMessageHandler(nullMessageName, (_, _) => { }),
                 Throws.TypeOf<ArgumentNullException>()
                     .With.Message.Contains("messageName"));
         });
@@ -511,7 +511,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         {
             await ngoServer.StartServerAsync();
             var count = 0;
-            ngoServer.SetVisibilityDelegate(clientId =>
+            ngoServer.SetVisibilityDelegate(_ =>
             {
                 if (count++ == 0)
                 {
@@ -523,7 +523,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             await UniTask.WaitUntil(() => onClientConnected);
             onClientConnected = false;
 
-            var instanceA = ngoServer.SpawnWithServerOwnership(networkObjectPrefab.gameObject);
+            ngoServer.SpawnWithServerOwnership(networkObjectPrefab.gameObject);
             await UniTask.DelayFrame(10);
             serverMessagingManager.SendHelloWorldToAllClients();
 
@@ -532,7 +532,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
 
             await UniTask.DelayFrame(10);
 
-            var instanceB = ngoServer.SpawnWithServerOwnership(networkObjectPrefab.gameObject);
+            ngoServer.SpawnWithServerOwnership(networkObjectPrefab.gameObject);
             await UniTask.DelayFrame(10);
             serverMessagingManager.SendHelloWorldToAllClients();
 
