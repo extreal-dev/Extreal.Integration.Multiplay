@@ -38,7 +38,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         private bool onMessageReceived;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeCracker", "CC0033")]
-        private CompositeDisposable disposables = new CompositeDisposable();
+        private readonly CompositeDisposable disposables = new CompositeDisposable();
 
         [UnitySetUp]
         public IEnumerator InitializeAsync() => UniTask.ToCoroutine(async () =>
