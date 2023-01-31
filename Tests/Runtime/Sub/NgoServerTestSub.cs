@@ -118,7 +118,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             Assert.IsTrue(networkManager.IsConnectedClient);
 
             await UniTask.WaitUntil(() => onMessageReceived);
-            Assert.AreEqual(MessageName.HELLO_WORLD_TO_CLIENT, clientMessagingManager.ReceivedMessageName);
+            Assert.AreEqual(MessageName.HelloWorldToClient, clientMessagingManager.ReceivedMessageName);
             Assert.AreEqual("Hello World", clientMessagingManager.ReceivedMessageText);
 
             clientMessagingManager.SendHelloWorld();
@@ -132,7 +132,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             Assert.IsTrue(networkManager.IsConnectedClient);
 
             await UniTask.WaitUntil(() => onMessageReceived);
-            Assert.AreEqual(MessageName.HELLO_WORLD_TO_ALL_CLIENTS, clientMessagingManager.ReceivedMessageName);
+            Assert.AreEqual(MessageName.HelloWorldToAllClients, clientMessagingManager.ReceivedMessageName);
             Assert.AreEqual("Hello World", clientMessagingManager.ReceivedMessageText);
 
             clientMessagingManager.SendHelloWorld();

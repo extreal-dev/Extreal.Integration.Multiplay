@@ -47,12 +47,12 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
 #pragma warning disable IDE0010
                     switch (serverMessagingManager.ReceivedMessageName)
                     {
-                        case MessageName.RESTART_TO_SERVER:
+                        case MessageName.RestartToServer:
                         {
                             RestartAsync().Forget();
                             break;
                         }
-                        case MessageName.HELLO_WORLD_TO_SERVER:
+                        case MessageName.HelloWorldToServer:
                         {
                             serverMessagingManager.SendHelloWorldToAllClients();
                             break;
