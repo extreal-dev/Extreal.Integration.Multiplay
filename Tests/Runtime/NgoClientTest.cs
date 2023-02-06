@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Extreal.Core.Common.Retry;
 using Extreal.Core.Logging;
 using Extreal.Integration.Multiplay.NGO.Test.Sub;
 using NUnit.Framework;
@@ -25,6 +26,9 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         private bool onUnexpectedDisconnected;
         private bool onApprovalRejected;
         private bool onMessageReceived;
+        private int onConnectRetrying;
+        private bool onConnectRetried;
+        private bool isInvokeOnConnectRetried;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeCracker", "CC0033")]
         private readonly CompositeDisposable disposables = new CompositeDisposable();
@@ -39,7 +43,14 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             networkManager = UnityEngine.Object.FindObjectOfType<NetworkManager>();
             networkManager.NetworkConfig.ConnectionApproval = true;
 
-            ngoClient = new NgoClient(networkManager);
+            InitializeClient();
+        });
+
+        private void InitializeClient(IRetryStrategy retryStrategy = null)
+        {
+            DisposeClient();
+
+            ngoClient = new NgoClient(networkManager, retryStrategy);
 
             _ = ngoClient.OnConnected
                 .Subscribe(_ => onConnected = true)
@@ -57,9 +68,24 @@ namespace Extreal.Integration.Multiplay.NGO.Test
                 .Subscribe(_ => onApprovalRejected = true)
                 .AddTo(disposables);
 
+            _ = ngoClient.OnConnectRetrying
+                .Subscribe(retryCount => onConnectRetrying = retryCount)
+                .AddTo(disposables);
+
+            _ = ngoClient.OnConnectRetried
+                .Subscribe(retryResult =>
+                {
+                    isInvokeOnConnectRetried = true;
+                    onConnectRetried = retryResult;
+                })
+                .AddTo(disposables);
+
             onConnected = false;
             onDisconnectingEventHandler = false;
             onUnexpectedDisconnected = false;
+            onConnectRetrying = 0;
+            onConnectRetried = false;
+            isInvokeOnConnectRetried = false;
 
             clientMessagingManager = new ClientMessagingManager(ngoClient);
 
@@ -68,14 +94,12 @@ namespace Extreal.Integration.Multiplay.NGO.Test
                 .AddTo(disposables);
 
             onMessageReceived = false;
-        });
+        }
 
         [UnityTearDown]
         public IEnumerator DisposeAsync() => UniTask.ToCoroutine(async () =>
         {
-            clientMessagingManager.Dispose();
-            ngoClient.Dispose();
-            disposables.Clear();
+            DisposeClient();
 
             if (networkManager != null)
             {
@@ -83,6 +107,13 @@ namespace Extreal.Integration.Multiplay.NGO.Test
                 UnityEngine.Object.Destroy(networkManager.gameObject);
             }
         });
+
+        private void DisposeClient()
+        {
+            clientMessagingManager?.Dispose();
+            ngoClient?.Dispose();
+            disposables.Clear();
+        }
 
         [OneTimeTearDown]
         public void OneTimeDispose()
@@ -114,6 +145,22 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             Assert.IsTrue(result);
             Assert.IsTrue(onConnected);
             Assert.IsTrue(networkManager.IsConnectedClient);
+        });
+
+        [UnityTest]
+        public IEnumerator ConnectSuccessForRetry() => UniTask.ToCoroutine(async () =>
+        {
+            InitializeClient(new CountingRetryStrategy());
+
+            var ngoConfig = new NgoConfig();
+
+            Assert.IsFalse(onConnected);
+            var result = await ngoClient.ConnectAsync(ngoConfig);
+            Assert.IsTrue(result);
+            Assert.IsTrue(onConnected);
+            Assert.IsTrue(networkManager.IsConnectedClient);
+            Assert.AreEqual(0, onConnectRetrying);
+            Assert.IsFalse(isInvokeOnConnectRetried);
         });
 
         [UnityTest]
@@ -235,6 +282,30 @@ namespace Extreal.Integration.Multiplay.NGO.Test
         });
 
         [UnityTest]
+        public IEnumerator ConnectWithTimeoutExceptionForRetry() => UniTask.ToCoroutine(async () =>
+        {
+            InitializeClient(new CountingRetryStrategy(5));
+
+            var ngoConfig = new NgoConfig(port: 7776, timeout: TimeSpan.FromSeconds(1));
+
+            Exception exception = null;
+            try
+            {
+                _ = await ngoClient.ConnectAsync(ngoConfig);
+            }
+            catch (Exception e)
+            {
+                exception = e;
+            }
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(typeof(TimeoutException), exception.GetType());
+            Assert.AreEqual("The connection timed-out", exception.Message);
+            Assert.AreEqual(5, onConnectRetrying);
+            Assert.IsTrue(isInvokeOnConnectRetried);
+            Assert.IsFalse(onConnectRetried);
+        });
+
+        [UnityTest]
         public IEnumerator ConnectWithOperationCanceledException() => UniTask.ToCoroutine(async () =>
         {
             var cancellationTokenSource = new CancellationTokenSource();
@@ -254,6 +325,35 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             Assert.IsNotNull(exception);
             Assert.AreEqual(typeof(OperationCanceledException), exception.GetType());
             Assert.AreEqual("The connection operation was canceled", exception.Message);
+        });
+
+        [UnityTest]
+        public IEnumerator ConnectWithOperationCanceledExceptionForRetry() => UniTask.ToCoroutine(async () =>
+        {
+            InitializeClient(new CountingRetryStrategy(5, _ => TimeSpan.FromSeconds(10)));
+
+            var cancellationTokenSource = new CancellationTokenSource();
+            UniTask.Create(async () =>
+            {
+                await UniTask.WaitUntil(() => onConnectRetrying == 1);
+                await UniTask.Delay(TimeSpan.FromSeconds(3));
+                cancellationTokenSource.Cancel();
+            }).Forget();
+
+            var ngoConfig = new NgoConfig(port: 7776, timeout: TimeSpan.FromMilliseconds(100));
+
+            Exception exception = null;
+            try
+            {
+                _ = await ngoClient.ConnectAsync(ngoConfig, cancellationTokenSource.Token);
+            }
+            catch (Exception e)
+            {
+                exception = e;
+            }
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(typeof(OperationCanceledException), exception.GetType());
+            Assert.AreEqual("The retry was canceled", exception.Message);
         });
 
         [UnityTest]
@@ -283,6 +383,50 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             await UniTask.WaitUntil(() => onUnexpectedDisconnected);
             Assert.IsFalse(networkManager.IsClient);
             Assert.IsFalse(networkManager.IsConnectedClient);
+        });
+
+        [UnityTest]
+        public IEnumerator StopServerBeforeDisconnectForRetry() => UniTask.ToCoroutine(async () =>
+        {
+            InitializeClient(new CountingRetryStrategy());
+
+            var ngoConfig = new NgoConfig(timeout: TimeSpan.FromMilliseconds(1000));
+            _ = await ngoClient.ConnectAsync(ngoConfig);
+            Assert.IsTrue(networkManager.IsConnectedClient);
+
+            clientMessagingManager.SendRestartServer();
+
+            onConnected = false;
+            await UniTask.WaitUntil(() => onUnexpectedDisconnected);
+            Assert.IsFalse(networkManager.IsClient);
+            Assert.IsFalse(networkManager.IsConnectedClient);
+
+            await UniTask.WaitUntil(() => onConnected);
+            await UniTask.WaitUntil(() => isInvokeOnConnectRetried);
+            Assert.IsTrue(0 < onConnectRetrying);
+            Assert.IsTrue(onConnectRetried);
+        });
+
+        [UnityTest]
+        public IEnumerator StopServerBeforeDisconnectWithTimeoutExceptionForRetry() => UniTask.ToCoroutine(async () =>
+        {
+            InitializeClient(new CountingRetryStrategy(1));
+
+            var ngoConfig = new NgoConfig(timeout: TimeSpan.FromMilliseconds(1000));
+            _ = await ngoClient.ConnectAsync(ngoConfig);
+            Assert.IsTrue(networkManager.IsConnectedClient);
+
+            clientMessagingManager.SendRestartServer();
+
+            onConnected = false;
+            await UniTask.WaitUntil(() => onUnexpectedDisconnected);
+            Assert.IsFalse(networkManager.IsClient);
+            Assert.IsFalse(networkManager.IsConnectedClient);
+
+            await UniTask.WaitUntil(() => isInvokeOnConnectRetried);
+            Assert.IsFalse(onConnected);
+            Assert.IsTrue(0 < onConnectRetrying);
+            Assert.IsFalse(onConnectRetried);
         });
 
         [UnityTest]
