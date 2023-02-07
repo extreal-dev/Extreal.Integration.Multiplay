@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Extreal.Core.Common.Retry;
@@ -85,7 +84,7 @@ namespace Extreal.Integration.Multiplay.NGO
             this.networkManager = networkManager;
 
             this.networkManager.OnClientConnectedCallback += OnClientConnectedEventHandler;
-            this.networkManager.OnClientDisconnectCallback += OnClientDisconnectedEventHandlerAsync;
+            this.networkManager.OnClientDisconnectCallback += OnClientDisconnectedEventHandler;
 
             this.retryStrategy = retryStrategy ?? new NoRetryStrategy();
         }
@@ -99,7 +98,7 @@ namespace Extreal.Integration.Multiplay.NGO
             }
 
             networkManager.OnClientConnectedCallback -= OnClientConnectedEventHandler;
-            networkManager.OnClientDisconnectCallback -= OnClientDisconnectedEventHandlerAsync;
+            networkManager.OnClientDisconnectCallback -= OnClientDisconnectedEventHandler;
 
             if (networkManager.IsClient)
             {
@@ -329,7 +328,7 @@ namespace Extreal.Integration.Multiplay.NGO
             onConnected.OnNext(Unit.Default);
         }
 
-        private async void OnClientDisconnectedEventHandlerAsync(ulong serverId)
+        private void OnClientDisconnectedEventHandler(ulong serverId)
         {
             if (networkManager.IsConnectedClient)
             {
@@ -339,7 +338,7 @@ namespace Extreal.Integration.Multiplay.NGO
                 }
 
                 onUnexpectedDisconnected.OnNext(Unit.Default);
-                await ReconnectAsync();
+                ReconnectAsync().Forget();
             }
             else
             {
@@ -352,7 +351,6 @@ namespace Extreal.Integration.Multiplay.NGO
             }
         }
 
-        [SuppressMessage("Design", "CC0004")]
         private async UniTask ReconnectAsync()
         {
             if (retryStrategy is NoRetryStrategy)
