@@ -37,13 +37,15 @@ namespace Extreal.Integration.Multiplay.NGO
         private readonly Subject<Unit> onUnexpectedDisconnected = new Subject<Unit>();
 
         /// <summary>
-        /// Invokes just before retrying to connect to the server.
+        /// <para>Invokes just before retrying to connect to the server.</para>
+        /// Arg: Retry count
         /// </summary>
         public IObservable<int> OnConnectRetrying => onConnectRetrying;
         private readonly Subject<int> onConnectRetrying = new Subject<int>();
 
         /// <summary>
-        /// Invokes immediately after finishing retrying to connect to the server.
+        /// <para>Invokes immediately after finishing retrying to connect to the server.</para>
+        /// Arg: Final results of retry. True for success, false for failure.
         /// </summary>
         public IObservable<bool> OnConnectRetried => onConnectRetried;
         private readonly Subject<bool> onConnectRetried = new Subject<bool>();
