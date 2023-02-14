@@ -143,7 +143,7 @@ namespace Extreal.Integration.Multiplay.NGO
         /// <para>UniTask of this method.</para>
         /// True if the connection operation is successful, false otherwise.
         /// </returns>
-        public async UniTask<bool> ConnectAsync(NgoConfig ngoConfig, CancellationToken token = default)
+        public UniTask<bool> ConnectAsync(NgoConfig ngoConfig, CancellationToken token = default)
         {
             Func<UniTask<bool>> connectAsync = async () =>
             {
@@ -207,7 +207,7 @@ namespace Extreal.Integration.Multiplay.NGO
             connectRetryHandler.OnRetrying.Subscribe(onConnectRetrying.OnNext).AddTo(connectRetryHandlerDisposables);
             connectRetryHandler.OnRetried.Subscribe(onConnectRetried.OnNext).AddTo(connectRetryHandlerDisposables);
 
-            return await connectRetryHandler.HandleAsync();
+            return connectRetryHandler.HandleAsync();
         }
 
         private void DisposeRetryHandler(bool clearOnly)
