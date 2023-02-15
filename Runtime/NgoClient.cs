@@ -64,9 +64,9 @@ namespace Extreal.Integration.Multiplay.NGO
                     {typeof(UNetTransport), new UNetTransportConnectionSetter()}
                 };
 
-        private readonly IRetryStrategy retryStrategy;
+        private readonly IRetryStrategy connectRetryStrategy;
         private RetryHandler<bool> connectRetryHandler;
-        private readonly CompositeDisposable connectRetryHandlerDisposables = new CompositeDisposable();
+        private readonly CompositeDisposable connectRetryDisposables = new CompositeDisposable();
 
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(NgoClient));
 
@@ -74,9 +74,9 @@ namespace Extreal.Integration.Multiplay.NGO
         /// Creates a new NgoClient with given networkManager.
         /// </summary>
         /// <param name="networkManager">NetworkManager to be used as a client.</param>
-        /// <param name="retryStrategy">Retry strategy to use for connecting to the server</param>
+        /// <param name="connectRetryStrategy">Retry strategy to use for connecting to the server</param>
         /// <exception cref="ArgumentNullException">If 'networkManager' is null.</exception>
-        public NgoClient(NetworkManager networkManager, IRetryStrategy retryStrategy = null)
+        public NgoClient(NetworkManager networkManager, IRetryStrategy connectRetryStrategy = null)
         {
             if (networkManager == null)
             {
@@ -88,7 +88,7 @@ namespace Extreal.Integration.Multiplay.NGO
             this.networkManager.OnClientConnectedCallback += OnClientConnectedEventHandler;
             this.networkManager.OnClientDisconnectCallback += OnClientDisconnectedEventHandler;
 
-            this.retryStrategy = retryStrategy ?? new NoRetryStrategy();
+            this.connectRetryStrategy = connectRetryStrategy ?? NoRetryStrategy.Instance;
         }
 
         /// <inheritdoc/>
@@ -111,6 +111,8 @@ namespace Extreal.Integration.Multiplay.NGO
             onDisconnecting.Dispose();
             onUnexpectedDisconnected.Dispose();
             onConnectionApprovalRejected.Dispose();
+            onConnectRetrying.Dispose();
+            onConnectRetried.Dispose();
 
             DisposeRetryHandler(false);
         }
@@ -203,9 +205,9 @@ namespace Extreal.Integration.Multiplay.NGO
             };
 
             DisposeRetryHandler(true);
-            connectRetryHandler = RetryHandler<bool>.Of(connectAsync, e => e is TimeoutException, retryStrategy, token);
-            connectRetryHandler.OnRetrying.Subscribe(onConnectRetrying.OnNext).AddTo(connectRetryHandlerDisposables);
-            connectRetryHandler.OnRetried.Subscribe(onConnectRetried.OnNext).AddTo(connectRetryHandlerDisposables);
+            connectRetryHandler = RetryHandler<bool>.Of(connectAsync, e => e is TimeoutException, connectRetryStrategy, token);
+            connectRetryHandler.OnRetrying.Subscribe(onConnectRetrying.OnNext).AddTo(connectRetryDisposables);
+            connectRetryHandler.OnRetried.Subscribe(onConnectRetried.OnNext).AddTo(connectRetryDisposables);
 
             return connectRetryHandler.HandleAsync();
         }
@@ -215,11 +217,11 @@ namespace Extreal.Integration.Multiplay.NGO
             connectRetryHandler?.Dispose();
             if (clearOnly)
             {
-                connectRetryHandlerDisposables.Clear();
+                connectRetryDisposables.Clear();
             }
             else
             {
-                connectRetryHandlerDisposables.Dispose();
+                connectRetryDisposables.Dispose();
             }
         }
 
@@ -355,7 +357,7 @@ namespace Extreal.Integration.Multiplay.NGO
 
         private async UniTask ReconnectAsync()
         {
-            if (retryStrategy is NoRetryStrategy)
+            if (connectRetryStrategy is NoRetryStrategy)
             {
                 return;
             }
