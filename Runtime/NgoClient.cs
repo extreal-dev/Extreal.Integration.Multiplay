@@ -114,7 +114,7 @@ namespace Extreal.Integration.Multiplay.NGO
             onConnectRetrying.Dispose();
             onConnectRetried.Dispose();
 
-            DisposeRetryHandler(false);
+            DisposeRetryHandler();
         }
 
         /// <summary>
@@ -204,7 +204,7 @@ namespace Extreal.Integration.Multiplay.NGO
                 return true;
             };
 
-            DisposeRetryHandler(true);
+            DisposeRetryHandler(clearOnly: true);
             connectRetryHandler = RetryHandler<bool>.Of(connectAsync, e => e is TimeoutException, connectRetryStrategy, token);
             connectRetryHandler.OnRetrying.Subscribe(onConnectRetrying.OnNext).AddTo(connectRetryDisposables);
             connectRetryHandler.OnRetried.Subscribe(onConnectRetried.OnNext).AddTo(connectRetryDisposables);
@@ -212,7 +212,7 @@ namespace Extreal.Integration.Multiplay.NGO
             return connectRetryHandler.HandleAsync();
         }
 
-        private void DisposeRetryHandler(bool clearOnly)
+        private void DisposeRetryHandler(bool clearOnly = false)
         {
             connectRetryHandler?.Dispose();
             if (clearOnly)
