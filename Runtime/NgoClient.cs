@@ -45,7 +45,7 @@ namespace Extreal.Integration.Multiplay.NGO
 
         /// <summary>
         /// <para>Invokes immediately after finishing retrying to connect to the server.</para>
-        /// Arg: Final results of retry. True for success, false for failure.
+        /// Arg: Final result of retry. True for success, false for failure.
         /// </summary>
         public IObservable<bool> OnConnectRetried => onConnectRetried;
         private readonly Subject<bool> onConnectRetried = new Subject<bool>();
