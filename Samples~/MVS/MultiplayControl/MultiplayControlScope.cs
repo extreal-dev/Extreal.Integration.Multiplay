@@ -1,4 +1,5 @@
-﻿using Unity.Netcode;
+﻿using Extreal.Core.Common.Retry;
+using Unity.Netcode;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -12,7 +13,7 @@ namespace Extreal.Integration.Multiplay.NGO.MVS.MultiplayControl
         protected override void Configure(IContainerBuilder builder)
         {
             builder.RegisterComponent(networkManager);
-            builder.Register<NgoClient>(Lifetime.Singleton);
+            builder.Register<NgoClient>(Lifetime.Singleton).WithParameter(typeof(IRetryStrategy), NoRetryStrategy.Instance);
 
             builder.RegisterEntryPoint<MultiplayControlPresenter>();
         }

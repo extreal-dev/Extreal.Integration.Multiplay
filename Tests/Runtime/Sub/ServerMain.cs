@@ -74,7 +74,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
         {
             await UniTask.DelayFrame(10);
             await ngoServer.StopServerAsync();
-            await UniTask.DelayFrame(10);
+            await UniTask.Delay(TimeSpan.FromSeconds(3));
             await ngoServer.StartServerAsync();
         }
     }

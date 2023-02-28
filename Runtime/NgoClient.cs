@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Extreal.Core.Common.Retry;
 using Extreal.Core.Common.System;
 using Extreal.Core.Logging;
 using UniRx;
@@ -36,6 +37,20 @@ namespace Extreal.Integration.Multiplay.NGO
         private readonly Subject<Unit> onUnexpectedDisconnected = new Subject<Unit>();
 
         /// <summary>
+        /// <para>Invokes just before retrying to connect to the server.</para>
+        /// Arg: Retry count
+        /// </summary>
+        public IObservable<int> OnConnectRetrying => onConnectRetrying;
+        private readonly Subject<int> onConnectRetrying = new Subject<int>();
+
+        /// <summary>
+        /// <para>Invokes immediately after finishing retrying to connect to the server.</para>
+        /// Arg: Final result of retry. True for success, false for failure.
+        /// </summary>
+        public IObservable<bool> OnConnectRetried => onConnectRetried;
+        private readonly Subject<bool> onConnectRetried = new Subject<bool>();
+
+        /// <summary>
         /// Invokes immediately after the connection approval is rejected from the server.
         /// </summary>
         public IObservable<Unit> OnConnectionApprovalRejected => onConnectionApprovalRejected;
@@ -49,14 +64,19 @@ namespace Extreal.Integration.Multiplay.NGO
                     {typeof(UNetTransport), new UNetTransportConnectionSetter()}
                 };
 
+        private readonly IRetryStrategy connectRetryStrategy;
+        private RetryHandler<bool> connectRetryHandler;
+        private readonly CompositeDisposable connectRetryDisposables = new CompositeDisposable();
+
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(NgoClient));
 
         /// <summary>
         /// Creates a new NgoClient with given networkManager.
         /// </summary>
         /// <param name="networkManager">NetworkManager to be used as a client.</param>
+        /// <param name="connectRetryStrategy">Retry strategy to use for connecting to the server</param>
         /// <exception cref="ArgumentNullException">If 'networkManager' is null.</exception>
-        public NgoClient(NetworkManager networkManager)
+        public NgoClient(NetworkManager networkManager, IRetryStrategy connectRetryStrategy = null)
         {
             if (networkManager == null)
             {
@@ -67,6 +87,8 @@ namespace Extreal.Integration.Multiplay.NGO
 
             this.networkManager.OnClientConnectedCallback += OnClientConnectedEventHandler;
             this.networkManager.OnClientDisconnectCallback += OnClientDisconnectedEventHandler;
+
+            this.connectRetryStrategy = connectRetryStrategy ?? NoRetryStrategy.Instance;
         }
 
         /// <inheritdoc/>
@@ -89,6 +111,10 @@ namespace Extreal.Integration.Multiplay.NGO
             onDisconnecting.Dispose();
             onUnexpectedDisconnected.Dispose();
             onConnectionApprovalRejected.Dispose();
+            onConnectRetrying.Dispose();
+            onConnectRetried.Dispose();
+
+            DisposeRetryHandler();
         }
 
         /// <summary>
@@ -119,60 +145,84 @@ namespace Extreal.Integration.Multiplay.NGO
         /// <para>UniTask of this method.</para>
         /// True if the connection operation is successful, false otherwise.
         /// </returns>
-        public async UniTask<bool> ConnectAsync(NgoConfig ngoConfig, CancellationToken token = default)
+        public UniTask<bool> ConnectAsync(NgoConfig ngoConfig, CancellationToken token = default)
         {
-            if (networkManager.IsClient)
+            Func<UniTask<bool>> connectAsync = async () =>
             {
-                if (Logger.IsDebug())
+                if (networkManager.IsClient)
                 {
-                    Logger.LogDebug("Unable to connect to the server again while this client is already running");
+                    if (Logger.IsDebug())
+                    {
+                        Logger.LogDebug("Unable to connect to the server again while this client is already running");
+                    }
+
+                    return false;
                 }
-                return false;
-            }
 
-            if (ngoConfig == null)
+                if (ngoConfig == null)
+                {
+                    throw new ArgumentNullException(nameof(ngoConfig));
+                }
+
+                var networkTransport = networkManager.NetworkConfig.NetworkTransport;
+                if (networkTransport == null)
+                {
+                    throw new InvalidOperationException($"{nameof(NetworkTransport)} in {nameof(NetworkManager)} must not be null");
+                }
+
+                if (!connectionSetters.ContainsKey(networkTransport.GetType()))
+                {
+                    throw new InvalidOperationException($"ConnectionSetter of {networkTransport.GetType().Name} is not added");
+                }
+
+                connectionSetters[networkTransport.GetType()].Set(networkTransport, ngoConfig);
+
+                if (ngoConfig.ConnectionData != null)
+                {
+                    networkManager.NetworkConfig.ConnectionData = ngoConfig.ConnectionData;
+                }
+
+                _ = networkManager.StartClient();
+
+                try
+                {
+                    await UniTask
+                        .WaitUntil(() => networkManager.IsConnectedClient, cancellationToken: token)
+                        .Timeout(ngoConfig.Timeout);
+                }
+                catch (TimeoutException)
+                {
+                    await ShutdownAsync();
+                    throw new TimeoutException("The connection timed-out");
+                }
+                catch (OperationCanceledException)
+                {
+                    await ShutdownAsync();
+                    throw new OperationCanceledException("The connection operation was canceled");
+                }
+
+                return true;
+            };
+
+            DisposeRetryHandler(clearOnly: true);
+            connectRetryHandler = RetryHandler<bool>.Of(connectAsync, e => e is TimeoutException, connectRetryStrategy, token);
+            connectRetryHandler.OnRetrying.Subscribe(onConnectRetrying.OnNext).AddTo(connectRetryDisposables);
+            connectRetryHandler.OnRetried.Subscribe(onConnectRetried.OnNext).AddTo(connectRetryDisposables);
+
+            return connectRetryHandler.HandleAsync();
+        }
+
+        private void DisposeRetryHandler(bool clearOnly = false)
+        {
+            connectRetryHandler?.Dispose();
+            if (clearOnly)
             {
-                throw new ArgumentNullException(nameof(ngoConfig));
+                connectRetryDisposables.Clear();
             }
-
-            var networkTransport = networkManager.NetworkConfig.NetworkTransport;
-            if (networkTransport == null)
+            else
             {
-                throw new InvalidOperationException($"{nameof(NetworkTransport)} in {nameof(NetworkManager)} must not be null");
+                connectRetryDisposables.Dispose();
             }
-
-            if (!connectionSetters.ContainsKey(networkTransport.GetType()))
-            {
-                throw new InvalidOperationException($"ConnectionSetter of {networkTransport.GetType().Name} is not added");
-            }
-
-            connectionSetters[networkTransport.GetType()].Set(networkTransport, ngoConfig);
-
-            if (ngoConfig.ConnectionData != null)
-            {
-                networkManager.NetworkConfig.ConnectionData = ngoConfig.ConnectionData;
-            }
-
-            _ = networkManager.StartClient();
-
-            try
-            {
-                await UniTask
-                    .WaitUntil(() => networkManager.IsConnectedClient, cancellationToken: token)
-                    .Timeout(ngoConfig.Timeout);
-            }
-            catch (TimeoutException)
-            {
-                networkManager.Shutdown();
-                throw new TimeoutException("The connection timed-out");
-            }
-            catch (OperationCanceledException)
-            {
-                networkManager.Shutdown();
-                throw new OperationCanceledException("The connection operation was canceled");
-            }
-
-            return true;
         }
 
         /// <summary>
@@ -187,8 +237,12 @@ namespace Extreal.Integration.Multiplay.NGO
             }
 
             onDisconnecting.OnNext(Unit.Default);
-            networkManager.Shutdown();
+            await ShutdownAsync();
+        }
 
+        private async UniTask ShutdownAsync()
+        {
+            networkManager.Shutdown();
             await UniTask.WaitWhile(() => networkManager.ShutdownInProgress);
         }
 
@@ -288,6 +342,7 @@ namespace Extreal.Integration.Multiplay.NGO
                 }
 
                 onUnexpectedDisconnected.OnNext(Unit.Default);
+                ReconnectAsync().Forget();
             }
             else
             {
@@ -297,6 +352,36 @@ namespace Extreal.Integration.Multiplay.NGO
                 }
 
                 onConnectionApprovalRejected.OnNext(Unit.Default);
+            }
+        }
+
+        private async UniTask ReconnectAsync()
+        {
+            if (connectRetryStrategy is NoRetryStrategy)
+            {
+                return;
+            }
+
+            if (Logger.IsDebug())
+            {
+                Logger.LogDebug("Reconnection start");
+            }
+
+            await ShutdownAsync();
+
+            Exception exception = null;
+            try
+            {
+                await connectRetryHandler.HandleAsync();
+            }
+            catch (Exception e)
+            {
+                exception = e;
+            }
+
+            if (Logger.IsDebug())
+            {
+                Logger.LogDebug("Reconnection finished", exception);
             }
         }
     }
