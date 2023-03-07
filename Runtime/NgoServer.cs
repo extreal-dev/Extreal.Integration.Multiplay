@@ -92,11 +92,6 @@ namespace Extreal.Integration.Multiplay.NGO
         /// <inheritdoc/>
         protected override void ReleaseManagedResources()
         {
-            if (Logger.IsDebug())
-            {
-                Logger.LogDebug($"Dispose {nameof(NgoServer)}");
-            }
-
             if (networkManager.IsServer)
             {
                 StopServerAsync().Forget();
