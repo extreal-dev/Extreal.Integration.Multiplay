@@ -254,7 +254,7 @@ namespace Extreal.Integration.Multiplay.NGO.Test
             var result = ngoServer.RemoveClient(connectedClientId);
             Assert.IsTrue(result);
             Assert.IsTrue(onClientRemoving);
-            Assert.IsFalse(onClientDisconnecting);
+            Assert.IsTrue(onClientDisconnecting);
             Assert.AreEqual(connectedClientId, removingClientId);
         });
 
