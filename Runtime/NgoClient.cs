@@ -7,7 +7,6 @@ using Extreal.Core.Common.System;
 using Extreal.Core.Logging;
 using UniRx;
 using Unity.Netcode;
-using Unity.Netcode.Transports.UNET;
 using Unity.Netcode.Transports.UTP;
 using static Unity.Netcode.CustomMessagingManager;
 
@@ -60,8 +59,7 @@ namespace Extreal.Integration.Multiplay.NGO
         private readonly Dictionary<Type, IConnectionSetter> connectionSetters
             = new Dictionary<Type, IConnectionSetter>
                 {
-                    {typeof(UnityTransport), new UnityTransportConnectionSetter()},
-                    {typeof(UNetTransport), new UNetTransportConnectionSetter()}
+                    {typeof(UnityTransport), new UnityTransportConnectionSetter()}
                 };
 
         private readonly IRetryStrategy connectRetryStrategy;

@@ -4,6 +4,7 @@
 
 - Open one Unity editor using ParrelSync.
 - We will call the originally opened editor `MAIN` and the newly opened editor `SUB`.
+- MAIN> Open `Build Settings` and put `Main` scene for testing into `Scenes In Build`.
 - SUB> Play the `ServerMain` scene.
 - MAIN> Run `Extreal.Integration.Multiplay.NGO.Test.dll`.
 - SUB> Stop playing the `ServerMain` scene when `NgoClientTest` has finished running.
