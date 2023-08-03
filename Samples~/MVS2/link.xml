@@ -5,4 +5,5 @@
   <assembly fullname="Extreal.Core.StageNavigation" preserve="all" />
   <assembly fullname="Extreal.Integration.Web.Common" preserve="all" />
   <assembly fullname="Extreal.Integration.P2P.WebRTC" preserve="all" />
+  <assembly fullname="Extreal.Integration.Multiplay.NGO" preserve="all" />
 </linker>
