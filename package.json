@@ -17,6 +17,10 @@
     {
       "displayName": "MVS",
       "path": "Samples~/MVS"
+    },
+    {
+      "displayName": "MVS2",
+      "path": "Samples~/MVS2"
     }
   ]
 }
