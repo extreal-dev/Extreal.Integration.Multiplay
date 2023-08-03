@@ -58,3 +58,7 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
+# npm
+WebScripts~/dist*
+WebScripts~/node_modules*
+Samples~/MVS/WebGLScripts/node_modules*
