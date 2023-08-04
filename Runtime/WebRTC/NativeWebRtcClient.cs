@@ -39,6 +39,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         {
             if (dcDict.ContainsKey(id))
             {
+                // Not covered by testing due to defensive implementation
                 return;
             }
 
@@ -64,6 +65,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         {
             if (dc.Label != Label)
             {
+                // Not covered by testing but passed by peer review
                 return;
             }
 

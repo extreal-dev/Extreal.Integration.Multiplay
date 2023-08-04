@@ -32,6 +32,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         {
             if (!Has(id))
             {
+                // Not covered by testing due to defensive implementation
                 return;
             }
             var ulongId = strToLongMapping[id];
