@@ -26,10 +26,6 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
 
         public ulong Get(string id) => strToLongMapping[id];
 
-        public bool Has(ulong id) => ulongToStrMapping.ContainsKey(id);
-
-        public string Get(ulong id) => ulongToStrMapping[id];
-
         public bool TryGet(ulong id, out string outId) => ulongToStrMapping.TryGetValue(id, out outId);
 
         public void Remove(string id)

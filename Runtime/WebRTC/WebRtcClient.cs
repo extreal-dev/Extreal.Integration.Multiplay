@@ -49,13 +49,9 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
 
         private static string ToStr(ArraySegment<byte> payload)
         {
-            if (0 < payload.Offset || payload.Count < payload.Array.Length)
-            {
-                var buf = new byte[payload.Count];
-                Buffer.BlockCopy(payload.Array!, payload.Offset, buf, 0, payload.Count);
-                return BitConverter.ToString(buf);
-            }
-            return BitConverter.ToString(payload.Array);
+            var buf = new byte[payload.Count];
+            Buffer.BlockCopy(payload.Array!, payload.Offset, buf, 0, payload.Count);
+            return BitConverter.ToString(buf);
         }
 
         private static byte[] ToByte(string payload)
