@@ -220,7 +220,7 @@ namespace Extreal.Integration.Multiplay.NGO
                 Logger.LogDebug("The server will stop");
             }
 
-            onServerStopping?.OnNext(Unit.Default);
+            onServerStopping.OnNext(Unit.Default);
             networkManager.Shutdown();
 
             await UniTask.WaitWhile(() => networkManager.ShutdownInProgress);
