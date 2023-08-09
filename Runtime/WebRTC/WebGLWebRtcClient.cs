@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using AOT;
 using Cysharp.Threading.Tasks;
 using Extreal.Core.Logging;
 using Extreal.Integration.Web.Common;
 using Unity.Netcode;
+using UnityEngine;
 
 namespace Extreal.Integration.Multiplay.NGO.WebRTC
 {
@@ -15,10 +14,10 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(WebGLWebRtcClient));
         private static readonly WebGLWebRtcConfig Config = new WebGLWebRtcConfig
         {
-            NgoServerClientId = NetworkManager.ServerClientId,
-            IsDebug = Logger.IsDebug()
+            ngoServerClientId = NetworkManager.ServerClientId,
+            isDebug = Logger.IsDebug()
         };
-        private static readonly string JsonConfig = JsonSerializer.Serialize(Config);
+        private static readonly string JsonConfig = JsonUtility.ToJson(Config);
 
         private static WebGLWebRtcClient instance;
 
@@ -61,13 +60,11 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         private static ulong ToUlong(string str) => Convert.ToUInt64(str);
     }
 
-    [SuppressMessage("Usage", "CC0047")]
+    [SuppressMessage("Usage", "IDE1006")]
     public class WebGLWebRtcConfig
     {
-        [JsonPropertyName("ngoServerClientId")]
-        public ulong NgoServerClientId { get; set; }
+        public ulong ngoServerClientId;
 
-        [JsonPropertyName("isDebug")]
-        public bool IsDebug { get; set; }
+        public bool isDebug;
     }
 }
