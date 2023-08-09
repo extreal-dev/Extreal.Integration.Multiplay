@@ -9,6 +9,9 @@ using UnityEngine;
 
 namespace Extreal.Integration.Multiplay.NGO.WebRTC
 {
+    /// <summary>
+    /// Class that handles WebRTC client for WebGL application.
+    /// </summary>
     public class WebGLWebRtcClient : WebRtcClient
     {
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(WebGLWebRtcClient));
@@ -21,6 +24,9 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
 
         private static WebGLWebRtcClient instance;
 
+        /// <summary>
+        /// Creates WebGLWebRtcClient.
+        /// </summary>
         public WebGLWebRtcClient()
         {
             instance = this;
@@ -43,15 +49,19 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
             => instance.FireOnDisconnected(ToUlong(clientId));
 
 #pragma warning disable CS1998
+        /// <inheritdoc/>
         protected override async UniTask DoConnectAsync()
             => WebGLHelper.CallAction(WithPrefix(nameof(DoConnectAsync)));
 #pragma warning restore CS1998
 
+        /// <inheritdoc/>
         protected override void DoSend(ulong clientId, string payload)
             => WebGLHelper.CallAction(WithPrefix(nameof(DoSend)), clientId.ToString(), payload);
 
+        /// <inheritdoc/>
         protected override void DoClear() => WebGLHelper.CallAction(WithPrefix(nameof(DoClear)));
 
+        /// <inheritdoc/>
         public override void DisconnectRemoteClient(ulong clientId)
             => WebGLHelper.CallAction(WithPrefix(nameof(DisconnectRemoteClient)), clientId.ToString());
 
@@ -60,11 +70,22 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         private static ulong ToUlong(string str) => Convert.ToUInt64(str);
     }
 
+    /// <summary>
+    /// Class that holds config for WebGL WebRTC.
+    /// </summary>
     [SuppressMessage("Usage", "IDE1006")]
     public class WebGLWebRtcConfig
     {
+        /// <summary>
+        /// Client ID of NGO Server.
+        /// </summary>
+        /// <value>Client ID of NGO Server.</value>
         public ulong ngoServerClientId;
 
+        /// <summary>
+        /// Indicates if debug logs are output.
+        /// </summary>
+        /// <value>True if debug logs are output, false otherwise.</value>
         public bool isDebug;
     }
 }

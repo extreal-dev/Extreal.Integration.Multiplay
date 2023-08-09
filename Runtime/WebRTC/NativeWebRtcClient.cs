@@ -12,6 +12,9 @@ using Unity.WebRTC;
 
 namespace Extreal.Integration.Multiplay.NGO.WebRTC
 {
+    /// <summary>
+    /// Class that handles WebRTC client for native application.
+    /// </summary>
     public class NativeWebRtcClient : WebRtcClient
     {
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(NativeWebRtcClient));
@@ -23,6 +26,10 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         private readonly NativePeerClient peerClient;
         private CancellationTokenSource cancellation;
 
+        /// <summary>
+        /// Creates NativeWebRtcClient with peerClient.
+        /// </summary>
+        /// <param name="peerClient">Peer client.</param>
         public NativeWebRtcClient(NativePeerClient peerClient)
         {
             dcDict = new Dictionary<string, RTCDataChannel>();
@@ -119,6 +126,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
             idMapper.Remove(id);
         }
 
+        /// <inheritdoc/>
         protected override async UniTask DoConnectAsync()
         {
             if (Logger.IsDebug())
@@ -160,6 +168,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
             return result;
         }
 
+        /// <inheritdoc/>
         protected override void DoSend(ulong clientId, string payload)
         {
             var fixedClientId =
@@ -177,6 +186,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
             dcDict[id].Send(payload);
         }
 
+        /// <inheritdoc/>
         protected override void DoClear()
         {
             cancellation.Cancel();
@@ -188,9 +198,11 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
             idMapper.Clear();
         }
 
+        /// <inheritdoc/>
         public override void DisconnectRemoteClient(ulong clientId)
             => disconnectedRemoteClients.Add(clientId);
 
+        /// <inheritdoc/>
         protected override void ReleaseManagedResources() => cancellation?.Dispose();
     }
 }
