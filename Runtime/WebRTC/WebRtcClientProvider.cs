@@ -10,8 +10,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         {
 #if !UNITY_WEBGL || UNITY_EDITOR
             return new NativeWebRtcClient(peerClient as NativePeerClient);
-#endif
-#if UNITY_WEBGL && !UNITY_EDITOR
+#else
             return new WebGLWebRtcClient();
 #endif
         }
