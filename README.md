@@ -52,7 +52,6 @@
   - Ability to create a group by specifying a name (host start)
 - VirtualSpace
   - Client can join a group (client join)
-  - Another client can join a group (other client join)
   - Clients can leave the group (client exit)
   - Ability to return to the group selection screen (host stop)
   - Ability to reject clients if the number of clients exceeds capacity (reject connection)
@@ -62,6 +61,7 @@
 - Group selection screen
   - Ability to join a group (join host)
 - Virtual space
+  - Another client can join a group (other client join)
   - Ability to return to the group selection screen while moving the player (leave host)
   - Error notification if the number of clients exceeds capacity (connection rejection)
 
