@@ -79,13 +79,11 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         /// <summary>
         /// Client ID of NGO Server.
         /// </summary>
-        /// <value>Client ID of NGO Server.</value>
         public ulong ngoServerClientId;
 
         /// <summary>
         /// Indicates if debug logs are output.
         /// </summary>
-        /// <value>True if debug logs are output, false otherwise.</value>
         public bool isDebug;
     }
 }
