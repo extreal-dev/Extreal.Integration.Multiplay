@@ -151,21 +151,12 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
 
         [SuppressMessage("Usage", "CC0014")]
         private ulong GetHostId(string caller, string hostId)
-        {
-            ulong result;
-            if (hostId is not null)
-            {
-                result = idMapper.Has(hostId) ? idMapper.Get(hostId) : HostIdNotFound;
-            }
-            else
-            {
-                result = HostIdNotFound;
-            }
+        { 
             if (Logger.IsDebug() && caller != nameof(Send))
             {
                 Logger.LogDebug($"{nameof(GetHostId)}: caller={caller} hostId={hostId}");
             }
-            return result;
+            return hostId is not null && idMapper.Has(hostId) ? idMapper.Get(hostId) : HostIdNotFound;
         }
 
         /// <inheritdoc/>
