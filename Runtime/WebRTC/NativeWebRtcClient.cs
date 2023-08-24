@@ -117,11 +117,11 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
 
         private void ClosePc(string id)
         {
-            if (!dcDict.TryGetValue(id, out var pc))
+            if (!dcDict.TryGetValue(id, out var dc))
             {
                 return;
             }
-            pc.Close();
+            dc.Close();
             dcDict.Remove(id);
             idMapper.Remove(id);
         }
@@ -151,7 +151,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
 
         [SuppressMessage("Usage", "CC0014")]
         private ulong GetHostId(string caller, string hostId)
-        { 
+        {
             if (Logger.IsDebug() && caller != nameof(Send))
             {
                 Logger.LogDebug($"{nameof(GetHostId)}: caller={caller} hostId={hostId}");
