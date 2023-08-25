@@ -19,6 +19,8 @@ namespace Extreal.Integration.Multiplay.NGO.MVS2.Controls.MultiplayControl.Host
 
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(MultiplayHost));
 
+        private const int MaxCapacity = 3;
+
         public MultiplayHost
         (
             NgoServer ngoServer,
@@ -28,14 +30,13 @@ namespace Extreal.Integration.Multiplay.NGO.MVS2.Controls.MultiplayControl.Host
             this.ngoServer = ngoServer;
             this.playerPrefab = playerPrefab;
 
-            ngoServer.OnServerStarted
+            this.ngoServer.SetConnectionApprovalCallback((_, response) =>
+                response.Approved = ngoServer.ConnectedClients.Count < MaxCapacity);
+
+            this.ngoServer.OnServerStarted
                 .Subscribe(_ =>
                     ngoServer.RegisterMessageHandler(MessageName.PlayerSpawn.ToString(), PlayerSpawnMessageHandler))
                 .AddTo(disposables);
-
-            // ngoServer.OnServerStopping
-            //     .Subscribe(_ => ngoServer.UnregisterMessageHandler(MessageName.PlayerSpawn.ToString()))
-            //     .AddTo(disposables);
         }
 
         protected override void ReleaseManagedResources()
