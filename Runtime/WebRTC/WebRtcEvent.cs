@@ -17,19 +17,19 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         /// Type of network event.
         /// </summary>
         /// <value>Event type.</value>
-        public NetworkEvent Type { get; private set; }
+        public NetworkEvent Type { get; }
 
         /// <summary>
         /// Client ID for this event.
         /// </summary>
         /// <value>Client ID.</value>
-        public ulong ClientId { get; private set; }
+        public ulong ClientId { get; }
 
         /// <summary>
         /// Received data.
         /// </summary>
         /// <value>Received data.</value>
-        public byte[] Payload { get; private set; }
+        public byte[] Payload { get; }
 
         private WebRtcEvent() : this(NetworkEvent.Nothing, ulong.MinValue)
         {
