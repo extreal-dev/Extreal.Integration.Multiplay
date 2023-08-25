@@ -194,7 +194,10 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
             => disconnectedRemoteClients.Add(clientId);
 
         /// <inheritdoc/>
-        protected override void ReleaseManagedResources() => cancellation?.Dispose();
+        protected override void ReleaseManagedResources() {
+            cancellation?.Cancel();
+            cancellation?.Dispose();
+        }
     }
 }
 #endif
