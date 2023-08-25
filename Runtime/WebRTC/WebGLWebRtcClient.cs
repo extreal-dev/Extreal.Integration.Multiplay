@@ -70,20 +70,10 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         private static ulong ToUlong(string str) => Convert.ToUInt64(str);
     }
 
-    /// <summary>
-    /// Class that holds config for WebGL WebRTC.
-    /// </summary>
     [SuppressMessage("Usage", "IDE1006")]
     public class WebGLWebRtcConfig
     {
-        /// <summary>
-        /// Client ID of NGO Server.
-        /// </summary>
         public ulong ngoServerClientId;
-
-        /// <summary>
-        /// Indicates if debug logs are output.
-        /// </summary>
         public bool isDebug;
     }
 }
