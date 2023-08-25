@@ -19,6 +19,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
     {
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(NativeWebRtcClient));
         private static readonly string Label = "multiplay";
+        private static readonly string ConnectionApprovalRejectedMessage = "Connection approval rejected";
 
         private readonly Dictionary<string, RTCDataChannel> dcDict;
         private readonly IdMapper idMapper;
@@ -99,7 +100,18 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
             }
 
             // Both Host and Client
-            dc.OnMessage = message => FireOnDataReceived(clientId, Encoding.ASCII.GetString(message));
+            dc.OnMessage = message =>
+            {
+                var messageStr = Encoding.ASCII.GetString(message);
+                if (messageStr == ConnectionApprovalRejectedMessage)
+                {
+                    FireOnDisconnected(clientId);
+                }
+                else
+                {
+                    FireOnDataReceived(clientId, Encoding.ASCII.GetString(message));
+                }
+            };
             dc.OnClose = () =>
             {
                 if (Logger.IsDebug())
@@ -191,7 +203,10 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
 
         /// <inheritdoc/>
         public override void DisconnectRemoteClient(ulong clientId)
-            => disconnectedRemoteClients.Add(clientId);
+        {
+            disconnectedRemoteClients.Add(clientId);
+            DoSend(clientId, ConnectionApprovalRejectedMessage);
+        }
 
         /// <inheritdoc/>
         protected override void ReleaseManagedResources() => cancellation?.Dispose();
