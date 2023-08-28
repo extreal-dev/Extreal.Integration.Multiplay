@@ -30,7 +30,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         public WebGLWebRtcClient()
         {
             instance = this;
-                        WebGLHelper.CallAction(WithPrefix(nameof(WebGLWebRtcClient)), JsonConfig);
+            WebGLHelper.CallAction(WithPrefix(nameof(WebGLWebRtcClient)), JsonConfig);
             WebGLHelper.AddCallback(WithPrefix(nameof(HandleOnConnected)), HandleOnConnected);
             WebGLHelper.AddCallback(WithPrefix(nameof(HandleOnDataReceived)), HandleOnDataReceived);
             WebGLHelper.AddCallback(WithPrefix(nameof(HandleOnDisconnected)), HandleOnDisconnected);
@@ -73,7 +73,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
     [SuppressMessage("Usage", "IDE1006")]
     public class WebGLWebRtcConfig
     {
-        public ulong ngoServerClientId { get; set;}
-        public bool isDebug { get; set;}
+        public ulong ngoServerClientId { get; set; }
+        public bool isDebug { get; set; }
     }
 }
