@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using AOT;
 using Cysharp.Threading.Tasks;
 using Extreal.Core.Logging;
 using Extreal.Integration.Web.Common;
 using Unity.Netcode;
-using UnityEngine;
 
 namespace Extreal.Integration.Multiplay.NGO.WebRTC
 {
@@ -20,7 +20,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
             ngoServerClientId = NetworkManager.ServerClientId,
             isDebug = Logger.IsDebug()
         };
-        private static readonly string JsonConfig = JsonUtility.ToJson(Config);
+        private static readonly string JsonConfig = JsonSerializer.Serialize(Config);
 
         private static WebGLWebRtcClient instance;
 
@@ -30,7 +30,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         public WebGLWebRtcClient()
         {
             instance = this;
-            WebGLHelper.CallAction(WithPrefix(nameof(WebGLWebRtcClient)), JsonConfig);
+                        WebGLHelper.CallAction(WithPrefix(nameof(WebGLWebRtcClient)), JsonConfig);
             WebGLHelper.AddCallback(WithPrefix(nameof(HandleOnConnected)), HandleOnConnected);
             WebGLHelper.AddCallback(WithPrefix(nameof(HandleOnDataReceived)), HandleOnDataReceived);
             WebGLHelper.AddCallback(WithPrefix(nameof(HandleOnDisconnected)), HandleOnDisconnected);
@@ -73,7 +73,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
     [SuppressMessage("Usage", "IDE1006")]
     public class WebGLWebRtcConfig
     {
-        public ulong ngoServerClientId;
-        public bool isDebug;
+        public ulong ngoServerClientId { get; set;}
+        public bool isDebug { get; set;}
     }
 }
