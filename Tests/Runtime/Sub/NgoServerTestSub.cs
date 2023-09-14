@@ -68,7 +68,18 @@ namespace Extreal.Integration.Multiplay.NGO.Test.Sub
             => disposables.Dispose();
 
         [UnityTest]
-        public IEnumerator StartServerWithConnectionApprovalSub() => UniTask.ToCoroutine(async () =>
+
+        public IEnumerator StartHostWithNgoClientSub() => UniTask.ToCoroutine(async () =>
+        {
+            var ngoConfig = new NgoConfig();
+            _ = await ngoClient.ConnectAsync(ngoConfig);
+            Assert.IsTrue(networkManager.IsConnectedClient);
+
+            await UniTask.Delay(TimeSpan.FromSeconds(1));
+        });
+
+        [UnityTest]
+        public IEnumerator StartHostWithConnectionApprovalSub() => UniTask.ToCoroutine(async () =>
         {
             networkManager.NetworkConfig.ConnectionApproval = true;
 

@@ -315,8 +315,13 @@ namespace Extreal.Integration.Multiplay.NGO
             }
         }
 
-        private void OnClientConnectedEventHandler(ulong serverId)
+        private void OnClientConnectedEventHandler(ulong clientId)
         {
+            if (clientId != NetworkManager.ServerClientId)
+            {
+                return;
+            }
+
             if (Logger.IsDebug())
             {
                 Logger.LogDebug($"The client has connected to the server");
@@ -325,8 +330,13 @@ namespace Extreal.Integration.Multiplay.NGO
             onConnected.OnNext(Unit.Default);
         }
 
-        private void OnClientDisconnectedEventHandler(ulong serverId)
+        private void OnClientDisconnectedEventHandler(ulong clientId)
         {
+            if (clientId != NetworkManager.ServerClientId)
+            {
+                return;
+            }
+
             if (networkManager.IsConnectedClient)
             {
                 if (Logger.IsDebug())

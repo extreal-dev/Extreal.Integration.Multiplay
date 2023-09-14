@@ -7,6 +7,7 @@ using Extreal.Core.Common.System;
 using Extreal.Core.Logging;
 using UniRx;
 using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 using static Unity.Netcode.CustomMessagingManager;
 using static Unity.Netcode.NetworkManager;
@@ -68,6 +69,12 @@ namespace Extreal.Integration.Multiplay.NGO
 
         private VisibilityDelegate checkObjectVisibility;
 
+        private readonly Dictionary<Type, IConnectionSetter> connectionSetters
+            = new Dictionary<Type, IConnectionSetter>
+            {
+                {typeof(UnityTransport), new UnityTransportConnectionSetter()},
+            };
+
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(NgoServer));
 
         /// <summary>
@@ -106,6 +113,73 @@ namespace Extreal.Integration.Multiplay.NGO
             onClientConnected.Dispose();
             onClientDisconnecting.Dispose();
             onClientRemoving.Dispose();
+        }
+
+        /// <summary>
+        /// Sets ConnectionSetter.
+        /// </summary>
+        /// <param name="connectionSetter">Connection setter of NetworkTransport to be set to.</param>
+        /// <exception cref="ArgumentNullException">If 'connectionSetter' is null.</exception>
+        public void AddConnectionSetter(IConnectionSetter connectionSetter)
+        {
+            if (connectionSetter == null)
+            {
+                throw new ArgumentNullException(nameof(connectionSetter));
+            }
+
+            connectionSetters[connectionSetter.TargetType] = connectionSetter;
+        }
+
+        /// <summary>
+        /// Asynchronously starts this host.
+        /// </summary>
+        /// <param name="ngoConfig">Connection config to be used in connection.</param>
+        /// <param name="token">Token used to cancel this operation.</param>
+        /// <exception cref="InvalidOperationException">If this host is already running, NetworkTransport in NetworkManager is null or ConnectionSetter for the real type of 'networkTransport' is not set.</exception>
+        /// <exception cref="ArgumentNullException">If 'ngoConfig' is null.</exception>
+        /// <exception cref="OperationCanceledException">If 'token' is canceled.</exception>
+        /// <returns>UniTask of this method.</returns>
+        public async UniTask StartHostAsync(NgoConfig ngoConfig, CancellationToken token = default)
+        {
+            if (networkManager.IsHost)
+            {
+                throw new InvalidOperationException("This host is already running");
+            }
+
+            if (ngoConfig == null)
+            {
+                throw new ArgumentNullException(nameof(ngoConfig));
+            }
+
+            var networkTransport = networkManager.NetworkConfig.NetworkTransport;
+            if (networkTransport == null)
+            {
+                throw new InvalidOperationException($"{nameof(NetworkTransport)} in {nameof(NetworkManager)} must not be null");
+            }
+
+            if (!connectionSetters.ContainsKey(networkTransport.GetType()))
+            {
+                throw new InvalidOperationException($"ConnectionSetter of {networkTransport.GetType().Name} is not added");
+            }
+
+            connectionSetters[networkTransport.GetType()].Set(networkTransport, ngoConfig);
+
+            if (ngoConfig.ConnectionData != null)
+            {
+                networkManager.NetworkConfig.ConnectionData = ngoConfig.ConnectionData;
+            }
+
+            _ = networkManager.StartHost();
+
+            try
+            {
+                await UniTask.WaitUntil(() => networkManager.IsListening, cancellationToken: token);
+            }
+            catch (OperationCanceledException)
+            {
+                networkManager.Shutdown();
+                throw new OperationCanceledException("The operation to start host was canceled");
+            }
         }
 
         /// <summary>

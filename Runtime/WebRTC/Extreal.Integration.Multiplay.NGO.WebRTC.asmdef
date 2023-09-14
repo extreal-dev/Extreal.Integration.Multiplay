@@ -1,0 +1,25 @@
+{
+    "name": "Extreal.Integration.Multiplay.NGO.WebRTC",
+    "rootNamespace": "Extreal.Integration.Multiplay.NGO.WebRTC",
+    "references": [
+        "Unity.WebRTC",
+        "Unity.Netcode.Runtime",
+        "Unity.Netcode.Components",
+        "UniTask",
+        "UniRx",
+        "Extreal.Core.Logging",
+        "Extreal.Core.Common",
+        "Extreal.Integration.Multiplay.NGO",
+        "Extreal.Integration.Web.Common",
+        "Extreal.Integration.P2P.WebRTC"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
