@@ -70,7 +70,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         private static ulong ToUlong(string str) => Convert.ToUInt64(str);
     }
 
-    [SuppressMessage("Usage", "IDE1006")]
+    [SuppressMessage("Usage", "IDE1006"), SuppressMessage("Usage", "CC0047")]
     public class WebGLWebRtcConfig
     {
         public ulong ngoServerClientId { get; set; }
