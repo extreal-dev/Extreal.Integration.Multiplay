@@ -1,6 +1,6 @@
 {
   "name": "@extreal-dev/extreal.integration.multiplay.ngo.webrtc",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "dev": "rollup --config rollup.config.ts --configPlugin typescript --watch",
     "prod": "rollup --config rollup.config.ts --configPlugin typescript --environment BUILD:production"
@@ -14,7 +14,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/extreal-dev/Extreal.Integration.Multiplay.NGO.git",
-    "directory": "WebScripts"
+    "directory": "WebScripts~"
   },
   "author": {
     "name": "TIS Inc."
@@ -31,7 +31,7 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@extreal-dev/extreal.integration.p2p.webrtc": "^0.0.5",
-    "@extreal-dev/extreal.integration.web.common": "^0.0.6"
+    "@extreal-dev/extreal.integration.p2p.webrtc": "^0.0.6",
+    "@extreal-dev/extreal.integration.web.common": "^0.0.7"
   }
 }
