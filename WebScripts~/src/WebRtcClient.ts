@@ -72,7 +72,8 @@ class WebRtcClient {
 
         // Host only
         if (this.getPeerClient().role === PeerRole.Host) {
-            dc.addEventListener("open", () => {
+            dc.addEventListener("open", async () => {
+                await this.wait(3000);
                 if (this.isDebug) {
                     console.log(`OnOpen: clientId=${clientId}`);
                 }
@@ -103,6 +104,10 @@ class WebRtcClient {
             this.callbacks.onDisconnected(clientId);
         });
     };
+
+    private wait = (ms: number): Promise<void> => {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
     private closePc = (id: string) => {
         const dc = this.dcMap.get(id);
