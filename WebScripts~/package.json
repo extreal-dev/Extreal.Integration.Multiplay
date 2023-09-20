@@ -1,6 +1,6 @@
 {
   "name": "@extreal-dev/extreal.integration.multiplay.ngo.webrtc",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "scripts": {
     "dev": "rollup --config rollup.config.ts --configPlugin typescript --watch",
     "prod": "rollup --config rollup.config.ts --configPlugin typescript --environment BUILD:production"
