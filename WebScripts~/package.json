@@ -1,6 +1,6 @@
 {
   "name": "@extreal-dev/extreal.integration.multiplay.ngo.webrtc",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "scripts": {
     "dev": "rollup --config rollup.config.ts --configPlugin typescript",
     "prod": "rollup --config rollup.config.ts --configPlugin typescript --environment BUILD:production"
@@ -31,7 +31,7 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@extreal-dev/extreal.integration.p2p.webrtc": "^0.0.10",
+    "@extreal-dev/extreal.integration.p2p.webrtc": "^0.0.11",
     "@extreal-dev/extreal.integration.web.common": "^0.0.8"
   }
 }
