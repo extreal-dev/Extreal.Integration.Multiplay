@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if UNITY_WEBGL && !UNITY_EDITOR
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using AOT;
@@ -77,3 +78,4 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         public bool isDebug { get; set; }
     }
 }
+#endif
