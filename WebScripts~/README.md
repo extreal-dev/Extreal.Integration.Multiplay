@@ -8,6 +8,6 @@ This package is a feature provided by [Extreal](https://fintan.jp/page/6717/), a
 - Run the following commands.
   ```
   $ yarn
-  $ yarn prod
+  $ yarn dev
   $ npm publish --access public
   ```
