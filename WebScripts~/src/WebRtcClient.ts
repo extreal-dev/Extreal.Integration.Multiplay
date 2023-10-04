@@ -15,7 +15,7 @@ type WebRtcCallbacks = {
 
 class WebRtcClient {
     private readonly label: string = "multiplay";
-    private readonly connectionApprovalRejectedMessage = "COnnection approval rejected";
+    private readonly connectionApprovalRejectedMessage = "Connection approval rejected";
     private readonly isDebug: boolean;
     private readonly webRtcConfig: WebRtcConfig;
     private readonly dcMap: Map<string, RTCDataChannel>;
@@ -83,7 +83,7 @@ class WebRtcClient {
         // Both Host and Client
         dc.addEventListener("message", (event) => {
             const message = event.data;
-            if (message == this.connectionApprovalRejectedMessage)
+            if (message === this.connectionApprovalRejectedMessage)
             {
               this.callbacks.onDisconnected(clientId);
             }
