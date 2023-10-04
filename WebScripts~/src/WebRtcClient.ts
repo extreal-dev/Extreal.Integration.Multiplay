@@ -21,6 +21,7 @@ class WebRtcClient {
     private readonly dcMap: Map<string, RTCDataChannel>;
     private readonly idMapper: IdMapper;
     private readonly disconnectedRemoteClients: Set<number>;
+    private readonly connectedClients: Set<number>;
     private readonly getPeerClient: PeerClientProvider;
     private readonly callbacks: WebRtcCallbacks;
     private cancel: boolean;
@@ -31,6 +32,7 @@ class WebRtcClient {
         this.dcMap = new Map();
         this.idMapper = new IdMapper();
         this.disconnectedRemoteClients = new Set();
+        this.connectedClients = new Set();
         this.getPeerClient = getPeerClient;
         this.callbacks = callbacks;
         this.cancel = false;
@@ -89,6 +91,7 @@ class WebRtcClient {
             }
             else
             {
+              this.connectedClients.add(clientId);
               this.callbacks.onDataReceived(clientId, message);
             }
         });
@@ -97,7 +100,9 @@ class WebRtcClient {
                 console.log(`OnClose: clientId=${clientId}`);
             }
 
-            if (this.getPeerClient().role === PeerRole.Host && this.disconnectedRemoteClients.delete(clientId)) {
+            if (this.getPeerClient().role === PeerRole.Host && 
+                this.disconnectedRemoteClients.delete(clientId) &&
+                !this.connectedClients.delete(clientId)) {
                 return;
             }
             this.callbacks.onDisconnected(clientId);
