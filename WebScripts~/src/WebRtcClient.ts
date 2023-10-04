@@ -101,8 +101,7 @@ class WebRtcClient {
             }
 
             if (this.getPeerClient().role === PeerRole.Host && 
-                this.disconnectedRemoteClients.delete(clientId) &&
-                !this.connectedClients.delete(clientId)) {
+                (this.disconnectedRemoteClients.delete(clientId) || !this.connectedClients.delete(clientId))) {
                 return;
             }
             this.callbacks.onDisconnected(clientId);
