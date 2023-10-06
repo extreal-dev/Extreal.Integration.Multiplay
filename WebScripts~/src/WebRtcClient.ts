@@ -15,12 +15,13 @@ type WebRtcCallbacks = {
 
 class WebRtcClient {
     private readonly label: string = "multiplay";
-    private readonly connectionApprovalRejectedMessage = "COnnection approval rejected";
+    private readonly connectionApprovalRejectedMessage = "Connection approval rejected";
     private readonly isDebug: boolean;
     private readonly webRtcConfig: WebRtcConfig;
     private readonly dcMap: Map<string, RTCDataChannel>;
     private readonly idMapper: IdMapper;
     private readonly disconnectedRemoteClients: Set<number>;
+    private readonly connectedClients: Set<number>;
     private readonly getPeerClient: PeerClientProvider;
     private readonly callbacks: WebRtcCallbacks;
     private cancel: boolean;
@@ -31,6 +32,7 @@ class WebRtcClient {
         this.dcMap = new Map();
         this.idMapper = new IdMapper();
         this.disconnectedRemoteClients = new Set();
+        this.connectedClients = new Set();
         this.getPeerClient = getPeerClient;
         this.callbacks = callbacks;
         this.cancel = false;
@@ -83,12 +85,13 @@ class WebRtcClient {
         // Both Host and Client
         dc.addEventListener("message", (event) => {
             const message = event.data;
-            if (message == this.connectionApprovalRejectedMessage)
+            if (message === this.connectionApprovalRejectedMessage)
             {
               this.callbacks.onDisconnected(clientId);
             }
             else
             {
+              this.connectedClients.add(clientId);
               this.callbacks.onDataReceived(clientId, message);
             }
         });
@@ -97,7 +100,8 @@ class WebRtcClient {
                 console.log(`OnClose: clientId=${clientId}`);
             }
 
-            if (this.getPeerClient().role === PeerRole.Host && this.disconnectedRemoteClients.delete(clientId)) {
+            if (this.getPeerClient().role === PeerRole.Host && 
+                (this.disconnectedRemoteClients.delete(clientId) || !this.connectedClients.delete(clientId))) {
                 return;
             }
             this.callbacks.onDisconnected(clientId);
@@ -129,7 +133,7 @@ class WebRtcClient {
                 () => this.idMapper.has(hostId),
                 () => this.cancel,
             );
-            const clientId = this.getHostId("connect", hostId);
+            const clientId = this.getHostId(hostId);
             if (!this.isHostIdNotFound(clientId)) {
                 this.callbacks.onConnected(clientId);
             }
@@ -139,10 +143,7 @@ class WebRtcClient {
     private readonly hostIdNotFound = 0;
     private isHostIdNotFound = (hostId: number) => hostId === this.hostIdNotFound;
 
-    private getHostId = (caller: string, hostId: string | null) => {
-        if (this.isDebug) {
-            console.log(`getHostId: caller=${caller} hostId=${hostId}`);
-        }
+    private getHostId = (hostId: string | null) => {
         return hostId !== null && this.idMapper.has(hostId) ? (this.idMapper.get(hostId) as number) : this.hostIdNotFound;
     };
 
@@ -150,7 +151,7 @@ class WebRtcClient {
         const fixedClientId =
             clientId !== this.webRtcConfig.ngoServerClientId
                 ? clientId
-                : this.getHostId("send", this.getPeerClient().hostId);
+                : this.getHostId(this.getPeerClient().hostId);
         const id = this.idMapper.get(fixedClientId);
         if (!id) {
             if (this.isDebug) {
