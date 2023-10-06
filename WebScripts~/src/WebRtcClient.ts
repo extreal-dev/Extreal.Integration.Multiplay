@@ -144,7 +144,7 @@ class WebRtcClient {
     private isHostIdNotFound = (hostId: number) => hostId === this.hostIdNotFound;
 
     private getHostId = (caller: string, hostId: string | null) => {
-        if (this.isDebug) {
+        if (this.isDebug && caller === "connect") {
             console.log(`getHostId: caller=${caller} hostId=${hostId}`);
         }
         return hostId !== null && this.idMapper.has(hostId) ? (this.idMapper.get(hostId) as number) : this.hostIdNotFound;
