@@ -133,7 +133,7 @@ class WebRtcClient {
                 () => this.idMapper.has(hostId),
                 () => this.cancel,
             );
-            const clientId = this.getHostId("connect", hostId);
+            const clientId = this.getHostId(hostId);
             if (!this.isHostIdNotFound(clientId)) {
                 this.callbacks.onConnected(clientId);
             }
@@ -143,10 +143,7 @@ class WebRtcClient {
     private readonly hostIdNotFound = 0;
     private isHostIdNotFound = (hostId: number) => hostId === this.hostIdNotFound;
 
-    private getHostId = (caller: string, hostId: string | null) => {
-        if (this.isDebug && caller === "connect") {
-            console.log(`getHostId: caller=${caller} hostId=${hostId}`);
-        }
+    private getHostId = (hostId: string | null) => {
         return hostId !== null && this.idMapper.has(hostId) ? (this.idMapper.get(hostId) as number) : this.hostIdNotFound;
     };
 
@@ -154,7 +151,7 @@ class WebRtcClient {
         const fixedClientId =
             clientId !== this.webRtcConfig.ngoServerClientId
                 ? clientId
-                : this.getHostId("send", this.getPeerClient().hostId);
+                : this.getHostId(this.getPeerClient().hostId);
         const id = this.idMapper.get(fixedClientId);
         if (!id) {
             if (this.isDebug) {
