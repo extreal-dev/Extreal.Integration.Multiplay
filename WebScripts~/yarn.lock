@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@extreal-dev/extreal.integration.p2p.webrtc@^0.0.13":
-  version "0.0.13"
-  resolved "https://registry.yarnpkg.com/@extreal-dev/extreal.integration.p2p.webrtc/-/extreal.integration.p2p.webrtc-0.0.13.tgz#3fc638af338bdd6a845cda85a0aed77b8ae1ab40"
-  integrity sha512-Iiy6Fa5Zp67v0gaiU0Ot8WjxxDC6UAODOsq5q6dkF01vzvRUKeT7xk1zshsZFX/d30c8TM5YOZsCRbUdPjM8HQ==
+"@extreal-dev/extreal.integration.p2p.webrtc@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@extreal-dev/extreal.integration.p2p.webrtc/-/extreal.integration.p2p.webrtc-0.0.15.tgz#08c6e8e8c693cef58e3bbecaa3d3599d485776a1"
+  integrity sha512-VW5ozr6vpanw+x4I8q/WBxSaGSF4wwfrgkh/jp4+m5Fajof+yXiMZseslG5WXZFIyIXkmNjsPkhYD+9AFommhg==
   dependencies:
     "@extreal-dev/extreal.integration.web.common" "^0.0.9"
     socket.io-client "^4.7.1"

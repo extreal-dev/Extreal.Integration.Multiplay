@@ -100,7 +100,7 @@ class WebRtcClient {
                 console.log(`OnClose: clientId=${clientId}`);
             }
 
-            if (this.getPeerClient().role === PeerRole.Host && 
+            if (this.getPeerClient().role === PeerRole.Host &&
                 (this.disconnectedRemoteClients.delete(clientId) || !this.connectedClients.delete(clientId))) {
                 return;
             }
@@ -164,6 +164,7 @@ class WebRtcClient {
 
     public clear = () => {
         this.disconnectedRemoteClients.clear();
+        this.connectedClients.clear();
         [...this.dcMap.keys()].forEach((id) => this.closePc(id));
         this.dcMap.clear();
         this.idMapper.clear();

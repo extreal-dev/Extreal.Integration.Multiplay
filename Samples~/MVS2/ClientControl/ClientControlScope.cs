@@ -24,13 +24,16 @@ namespace Extreal.Integration.Multiplay.NGO.MVS2.ClientControl
                     ConnectionTimeout = TimeSpan.FromSeconds(3),
                     Reconnection = false
                 },
-                new List<string>
+                new List<IceServerConfig>
                 {
-                    "stun:stun.l.google.com:19302",
-                    "stun:stun1.l.google.com:19302",
-                    "stun:stun2.l.google.com:19302",
-                    "stun:stun3.l.google.com:19302",
-                    "stun:stun4.l.google.com:19302",
+                    new IceServerConfig(new List<string>
+                    {
+                        "stun:stun.l.google.com:19302",
+                        "stun:stun1.l.google.com:19302",
+                        "stun:stun2.l.google.com:19302",
+                        "stun:stun3.l.google.com:19302",
+                        "stun:stun4.l.google.com:19302"
+                    }, "test-name", "test-credential")
                 });
 
             var peerClient = PeerClientProvider.Provide(peerConfig);

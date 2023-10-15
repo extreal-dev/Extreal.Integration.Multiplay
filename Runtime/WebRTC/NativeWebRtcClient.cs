@@ -22,8 +22,9 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         private static readonly string ConnectionApprovalRejectedMessage = "Connection approval rejected";
 
         private readonly Dictionary<string, RTCDataChannel> dcDict;
-        private readonly IdMapper idMapper;
+        private readonly NativeIdMapper idMapper;
         private readonly HashSet<ulong> disconnectedRemoteClients;
+        private readonly HashSet<ulong> connectedClients;
         private readonly NativePeerClient peerClient;
         private CancellationTokenSource cancellation;
 
@@ -34,8 +35,9 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         public NativeWebRtcClient(NativePeerClient peerClient)
         {
             dcDict = new Dictionary<string, RTCDataChannel>();
-            idMapper = new IdMapper();
+            idMapper = new NativeIdMapper();
             disconnectedRemoteClients = new HashSet<ulong>();
+            connectedClients = new HashSet<ulong>();
             this.peerClient = peerClient;
             cancellation = new CancellationTokenSource();
 
@@ -109,6 +111,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
                 }
                 else
                 {
+                    connectedClients.Add(clientId);
                     FireOnDataReceived(clientId, Encoding.ASCII.GetString(message));
                 }
             };
@@ -119,7 +122,8 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
                     Logger.LogDebug($"{nameof(dc.OnClose)}: clientId={clientId}");
                 }
 
-                if (peerClient.Role == PeerRole.Host && disconnectedRemoteClients.Remove(clientId))
+                if (peerClient.Role == PeerRole.Host
+                    && (disconnectedRemoteClients.Remove(clientId) || !connectedClients.Remove(clientId)))
                 {
                     return;
                 }
@@ -150,7 +154,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
             {
                 var hostId = peerClient.HostId;
                 await UniTask.WaitUntil(() => idMapper.Has(hostId), cancellationToken: cancellation.Token);
-                var clientId = GetHostId(nameof(Connect), hostId);
+                var clientId = GetHostId(hostId);
                 if (!IsHostIdNotFound(clientId))
                 {
                     FireOnConnected(clientId);
@@ -162,14 +166,8 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         private static bool IsHostIdNotFound(ulong hostId) => hostId == HostIdNotFound;
 
         [SuppressMessage("Usage", "CC0014")]
-        private ulong GetHostId(string caller, string hostId)
-        {
-            if (Logger.IsDebug() && caller != nameof(Send))
-            {
-                Logger.LogDebug($"{nameof(GetHostId)}: caller={caller} hostId={hostId}");
-            }
-            return hostId is not null && idMapper.Has(hostId) ? idMapper.Get(hostId) : HostIdNotFound;
-        }
+        private ulong GetHostId(string hostId)
+            => hostId is not null && idMapper.Has(hostId) ? idMapper.Get(hostId) : HostIdNotFound;
 
         /// <inheritdoc/>
         protected override void DoSend(ulong clientId, string payload)
@@ -177,7 +175,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
             var fixedClientId =
                 clientId != NetworkManager.ServerClientId
                     ? clientId
-                    : GetHostId(nameof(Send), peerClient.HostId);
+                    : GetHostId(peerClient.HostId);
             if (!idMapper.TryGet(fixedClientId, out var id))
             {
                 if (Logger.IsDebug())
@@ -196,6 +194,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
             cancellation.Dispose();
             cancellation = new CancellationTokenSource();
             disconnectedRemoteClients.Clear();
+            connectedClients.Clear();
             dcDict.Keys.ToList().ForEach(ClosePc);
             dcDict.Clear();
             idMapper.Clear();

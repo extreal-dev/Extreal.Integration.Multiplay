@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !UNITY_WEBGL || UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 
 namespace Extreal.Integration.Multiplay.NGO.WebRTC
@@ -6,7 +7,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
     /// <summary>
     /// Class that maps client ID and local ID.
     /// </summary>
-    public class IdMapper
+    public class NativeIdMapper
     {
         private readonly Dictionary<string, ulong> strToLongMapping = new Dictionary<string, ulong>();
         private readonly Dictionary<ulong, string> ulongToStrMapping = new Dictionary<ulong, string>();
@@ -77,3 +78,4 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         }
     }
 }
+#endif
