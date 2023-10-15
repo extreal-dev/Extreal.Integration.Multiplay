@@ -31,7 +31,7 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@extreal-dev/extreal.integration.p2p.webrtc": "^0.0.13",
+    "@extreal-dev/extreal.integration.p2p.webrtc": "^0.0.15",
     "@extreal-dev/extreal.integration.web.common": "^0.0.9"
   }
 }
