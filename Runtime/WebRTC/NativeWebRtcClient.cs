@@ -22,7 +22,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         private static readonly string ConnectionApprovalRejectedMessage = "Connection approval rejected";
 
         private readonly Dictionary<string, RTCDataChannel> dcDict;
-        private readonly IdMapper idMapper;
+        private readonly NativeIdMapper idMapper;
         private readonly HashSet<ulong> disconnectedRemoteClients;
         private readonly NativePeerClient peerClient;
         private CancellationTokenSource cancellation;
@@ -34,7 +34,7 @@ namespace Extreal.Integration.Multiplay.NGO.WebRTC
         public NativeWebRtcClient(NativePeerClient peerClient)
         {
             dcDict = new Dictionary<string, RTCDataChannel>();
-            idMapper = new IdMapper();
+            idMapper = new NativeIdMapper();
             disconnectedRemoteClients = new HashSet<ulong>();
             this.peerClient = peerClient;
             cancellation = new CancellationTokenSource();
