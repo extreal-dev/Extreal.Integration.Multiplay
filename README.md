@@ -17,20 +17,17 @@
 ### For Extreal.Integration.Multiplay.NGO.WebRTC
 
 - Enter the following command in the `WebScripts~` directory.
-
    ```bash
    yarn
    yarn dev
    ```
-
-- Import the sample MVS2 from Package Manager.
+- Import the sample MVN and MVS2 from Package Manager.
+  - MVN is also required as some materials depend on MVN2 to MVN.
 - Enter the following command in the `MVS2/WebScripts` directory.
-
    ```bash
    yarn
    yarn dev
    ```
-
    The JavaScript code will be built and output to `/Assets/WebTemplates/Dev`.
 - Open `Build Settings` and change the platform to `WebGL`.
 - Select `Dev` from `Player Settings > Resolution and Presentation > WebGL Template`.
