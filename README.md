@@ -45,8 +45,8 @@
    yarn
    yarn dev
    ```
-- Import the sample MVN and MVS2 from Package Manager.
-    - MVN is also required as some materials depend on MVN2 to MVN.
+- Import the sample MVS and MVS2 from Package Manager.
+    - MVS is also required as some materials depend on MVS2 to MVS.
 - Enter the following command in the `MVS2/WebScripts` directory.
    ```bash
    yarn
