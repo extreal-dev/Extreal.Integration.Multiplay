@@ -53,7 +53,7 @@ MonoBehaviour:
       NetworkPrefabsLists:
       - {fileID: 11400000, guid: 829ca5fb29d229343a04b72d763ff67f, type: 2}
     TickRate: 30
-    ClientConnectionBufferTimeout: 10
+    ClientConnectionBufferTimeout: 30
     ConnectionApproval: 1
     ConnectionData: 
     EnableTimeResync: 0
@@ -69,7 +69,7 @@ MonoBehaviour:
     EnableNetworkLogs: 1
     OldPrefabList: []
   RunInBackground: 1
-  LogLevel: 1
+  LogLevel: 0
 --- !u!114 &732148706223036605
 MonoBehaviour:
   m_ObjectHideFlags: 0
