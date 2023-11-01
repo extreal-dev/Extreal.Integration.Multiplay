@@ -9,7 +9,6 @@
 - MAIN> Run `Extreal.Integration.Multiplay.NGO.Test.dll`.
 - SUB> Stop playing the `ServerMain` scene when `NgoClientTest` has finished running.
 - SUB> Run `Extreal.Integration.Multiplay.NGO.Test.Sub.dll`.
-- SUB> Run the `UNetTransportServer` scene in `SUB` after all tests in `SUB`.
 - MAIN> All tests are completed.
 
 ## How to play the sample
