@@ -1,17 +1,17 @@
 ﻿{
   "name": "jp.co.tis.extreal.integration.multiplay.ngo",
-  "version": "1.2.0",
+  "version": "1.3.0-next.2",
   "displayName": "Extreal.Integration.Multiplay.NGO",
   "unity": "2022.3",
   "author": {
     "name": "TIS Inc."
   },
   "dependencies": {
-    "com.unity.netcode.gameobjects": "1.5.1",
-    "com.cysharp.unitask": "2.3.3",
+    "com.unity.netcode.gameobjects": "1.7.1",
+    "com.cysharp.unitask": "2.5.0",
     "com.neuecc.unirx": "7.1.0",
     "jp.co.tis.extreal.core.logging": "1.2.0",
-    "jp.co.tis.extreal.core.common": "1.1.0"
+    "jp.co.tis.extreal.core.common": "1.2.0-next.1"
   },
   "samples": [
     {
